@@ -1,10 +1,12 @@
 package com.easybbs.entity.query;
 
+import lombok.Data;
+
 /**
  * 文章信息参数
  */
+@Data
 public class ForumArticleQuery extends BaseParam {
-
 
     /**
      * 文章ID
@@ -127,6 +129,11 @@ public class ForumArticleQuery extends BaseParam {
     private Integer goodCount;
 
     /**
+     * 收藏数
+     */
+    private Integer collectCount;
+
+    /**
      * 评论数
      */
     private Integer commentCount;
@@ -159,336 +166,15 @@ public class ForumArticleQuery extends BaseParam {
     private String keyword;
 
     /**
+     * 收藏用户ID
+     */
+    private String collectUserId;
+
+    private String collectKeyword;
+
+    /**
      * 当前用户登录ID
      */
     private String currentUserId;
-
-    public String getCurrentUserId() {
-        return currentUserId;
-    }
-
-    public void setCurrentUserId(String currentUserId) {
-        this.currentUserId = currentUserId;
-    }
-
-    public String getKeyword() {
-        return keyword;
-    }
-
-    public void setKeyword(String keyword) {
-        this.keyword = keyword;
-    }
-
-    public String getCommentUserId() {
-        return commentUserId;
-    }
-
-    public void setCommentUserId(String commentUserId) {
-        this.commentUserId = commentUserId;
-    }
-
-    public String getLikeUserId() {
-        return likeUserId;
-    }
-
-    public void setLikeUserId(String likeUserId) {
-        this.likeUserId = likeUserId;
-    }
-
-    public void setArticleId(String articleId) {
-        this.articleId = articleId;
-    }
-
-    public String getArticleId() {
-        return this.articleId;
-    }
-
-    public void setArticleIdFuzzy(String articleIdFuzzy) {
-        this.articleIdFuzzy = articleIdFuzzy;
-    }
-
-    public String getArticleIdFuzzy() {
-        return this.articleIdFuzzy;
-    }
-
-    public void setBoardId(Integer boardId) {
-        this.boardId = boardId;
-    }
-
-    public Integer getBoardId() {
-        return this.boardId;
-    }
-
-    public void setBoardName(String boardName) {
-        this.boardName = boardName;
-    }
-
-    public String getBoardName() {
-        return this.boardName;
-    }
-
-    public void setBoardNameFuzzy(String boardNameFuzzy) {
-        this.boardNameFuzzy = boardNameFuzzy;
-    }
-
-    public String getBoardNameFuzzy() {
-        return this.boardNameFuzzy;
-    }
-
-    public void setpBoardId(Integer pBoardId) {
-        this.pBoardId = pBoardId;
-    }
-
-    public Integer getpBoardId() {
-        return this.pBoardId;
-    }
-
-    public void setpBoardName(String pBoardName) {
-        this.pBoardName = pBoardName;
-    }
-
-    public String getpBoardName() {
-        return this.pBoardName;
-    }
-
-    public void setpBoardNameFuzzy(String pBoardNameFuzzy) {
-        this.pBoardNameFuzzy = pBoardNameFuzzy;
-    }
-
-    public String getpBoardNameFuzzy() {
-        return this.pBoardNameFuzzy;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUserId() {
-        return this.userId;
-    }
-
-    public void setUserIdFuzzy(String userIdFuzzy) {
-        this.userIdFuzzy = userIdFuzzy;
-    }
-
-    public String getUserIdFuzzy() {
-        return this.userIdFuzzy;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public String getNickName() {
-        return this.nickName;
-    }
-
-    public void setNickNameFuzzy(String nickNameFuzzy) {
-        this.nickNameFuzzy = nickNameFuzzy;
-    }
-
-    public String getNickNameFuzzy() {
-        return this.nickNameFuzzy;
-    }
-
-    public void setUserIpAddress(String userIpAddress) {
-        this.userIpAddress = userIpAddress;
-    }
-
-    public String getUserIpAddress() {
-        return this.userIpAddress;
-    }
-
-    public void setUserIpAddressFuzzy(String userIpAddressFuzzy) {
-        this.userIpAddressFuzzy = userIpAddressFuzzy;
-    }
-
-    public String getUserIpAddressFuzzy() {
-        return this.userIpAddressFuzzy;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public void setTitleFuzzy(String titleFuzzy) {
-        this.titleFuzzy = titleFuzzy;
-    }
-
-    public String getTitleFuzzy() {
-        return this.titleFuzzy;
-    }
-
-    public void setCover(String cover) {
-        this.cover = cover;
-    }
-
-    public String getCover() {
-        return this.cover;
-    }
-
-    public void setCoverFuzzy(String coverFuzzy) {
-        this.coverFuzzy = coverFuzzy;
-    }
-
-    public String getCoverFuzzy() {
-        return this.coverFuzzy;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getContent() {
-        return this.content;
-    }
-
-    public void setContentFuzzy(String contentFuzzy) {
-        this.contentFuzzy = contentFuzzy;
-    }
-
-    public String getContentFuzzy() {
-        return this.contentFuzzy;
-    }
-
-    public void setMarkdownContent(String markdownContent) {
-        this.markdownContent = markdownContent;
-    }
-
-    public String getMarkdownContent() {
-        return this.markdownContent;
-    }
-
-    public void setMarkdownContentFuzzy(String markdownContentFuzzy) {
-        this.markdownContentFuzzy = markdownContentFuzzy;
-    }
-
-    public String getMarkdownContentFuzzy() {
-        return this.markdownContentFuzzy;
-    }
-
-    public void setEditorType(Integer editorType) {
-        this.editorType = editorType;
-    }
-
-    public Integer getEditorType() {
-        return this.editorType;
-    }
-
-    public void setSummary(String summary) {
-        this.summary = summary;
-    }
-
-    public String getSummary() {
-        return this.summary;
-    }
-
-    public void setSummaryFuzzy(String summaryFuzzy) {
-        this.summaryFuzzy = summaryFuzzy;
-    }
-
-    public String getSummaryFuzzy() {
-        return this.summaryFuzzy;
-    }
-
-    public void setPostTime(String postTime) {
-        this.postTime = postTime;
-    }
-
-    public String getPostTime() {
-        return this.postTime;
-    }
-
-    public void setPostTimeStart(String postTimeStart) {
-        this.postTimeStart = postTimeStart;
-    }
-
-    public String getPostTimeStart() {
-        return this.postTimeStart;
-    }
-
-    public void setPostTimeEnd(String postTimeEnd) {
-        this.postTimeEnd = postTimeEnd;
-    }
-
-    public String getPostTimeEnd() {
-        return this.postTimeEnd;
-    }
-
-    public void setLastUpdateTime(String lastUpdateTime) {
-        this.lastUpdateTime = lastUpdateTime;
-    }
-
-    public String getLastUpdateTime() {
-        return this.lastUpdateTime;
-    }
-
-    public void setLastUpdateTimeStart(String lastUpdateTimeStart) {
-        this.lastUpdateTimeStart = lastUpdateTimeStart;
-    }
-
-    public String getLastUpdateTimeStart() {
-        return this.lastUpdateTimeStart;
-    }
-
-    public void setLastUpdateTimeEnd(String lastUpdateTimeEnd) {
-        this.lastUpdateTimeEnd = lastUpdateTimeEnd;
-    }
-
-    public String getLastUpdateTimeEnd() {
-        return this.lastUpdateTimeEnd;
-    }
-
-    public void setReadCount(Integer readCount) {
-        this.readCount = readCount;
-    }
-
-    public Integer getReadCount() {
-        return this.readCount;
-    }
-
-    public void setGoodCount(Integer goodCount) {
-        this.goodCount = goodCount;
-    }
-
-    public Integer getGoodCount() {
-        return this.goodCount;
-    }
-
-    public void setCommentCount(Integer commentCount) {
-        this.commentCount = commentCount;
-    }
-
-    public Integer getCommentCount() {
-        return this.commentCount;
-    }
-
-    public void setTopType(Integer topType) {
-        this.topType = topType;
-    }
-
-    public Integer getTopType() {
-        return this.topType;
-    }
-
-    public void setAttachmentType(Integer attachmentType) {
-        this.attachmentType = attachmentType;
-    }
-
-    public Integer getAttachmentType() {
-        return this.attachmentType;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public Integer getStatus() {
-        return this.status;
-    }
 
 }

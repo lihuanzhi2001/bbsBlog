@@ -41,6 +41,8 @@
         <result column="read_count" property="readCount"/>
         <!--点赞数-->
         <result column="good_count" property="goodCount"/>
+        <!--收藏数-->
+        <result column="collect_count" property="collectCount"/>
         <!--评论数-->
         <result column="comment_count" property="commentCount"/>
         <!--0未置顶  1:已置顶-->
@@ -57,7 +59,7 @@
         article_id
         ,board_id,board_name,p_board_id,p_board_name,
 		 user_id,nick_name,user_ip_address,title,cover,editor_type,summary,post_time,
-		 last_update_time,read_count,good_count,comment_count,top_type,
+		 last_update_time,read_count,good_count,collect_count,comment_count,top_type,
 		 attachment_type,status
     </sql>
 
@@ -115,6 +117,9 @@
         </if>
         <if test="query.goodCount != null">
             and good_count = #{query.goodCount}
+        </if>
+        <if test="query.collectCount != null">
+            and collect_count = #{query.collectCount}
         </if>
         <if test="query.commentCount != null">
             and comment_count = #{query.commentCount}
@@ -194,6 +199,12 @@
             <if test="query.likeUserId!=null and query.likeUserId!=''">
                 and article_id in(select object_id from like_record where user_id = #{query.likeUserId} and op_type=0)
             </if>
+
+            <!-- TODO 新增收藏查询功能 -->
+            <if test="query.collectUserId!=null and query.collectUserId!=''">
+                and article_id in(select object_id from collect_record where user_id = #{query.collectUserId})
+            </if>
+
             <!-- 查询待审核 -->
             <if test="query.currentUserId!=null">
                 and (status = 1 or (status = 0 and user_id = #{query.currentUserId}))
@@ -278,6 +289,9 @@
             </if>
             <if test="bean.goodCount != null">
                 good_count,
+            </if>
+            <if test="bean.collectCount != null">
+                collect_count,
             </if>
             <if test="bean.commentCount != null">
                 comment_count,
@@ -420,6 +434,9 @@
             <if test="bean.goodCount != null">
                 good_count,
             </if>
+            <if test="bean.collectCount != null">
+                collect_count,
+            </if>
             <if test="bean.commentCount != null">
                 comment_count,
             </if>
@@ -557,6 +574,9 @@
             <if test="bean.goodCount!=null">
                 good_count = VALUES(good_count),
             </if>
+            <if test="bean.collectCount!=null">
+                collect_count = VALUES(collect_count),
+            </if>
             <if test="bean.commentCount!=null">
                 comment_count = VALUES(comment_count),
             </if>
@@ -593,6 +613,7 @@
         last_update_time,
         read_count,
         good_count,
+        collect_count,
         comment_count,
         top_type,
         attachment_type,
@@ -647,6 +668,7 @@
         last_update_time,
         read_count,
         good_count,
+        collect_count,
         comment_count,
         top_type,
         attachment_type,
@@ -697,6 +719,7 @@
         last_update_time = VALUES(last_update_time),
         read_count = VALUES(read_count),
         good_count = VALUES(good_count),
+        collect_count = VALUES(collect_count),
         comment_count = VALUES(comment_count),
         top_type = VALUES(top_type),
         attachment_type = VALUES(attachment_type),
@@ -758,6 +781,9 @@
             <if test="bean.goodCount != null">
                 good_count = #{bean.goodCount},
             </if>
+            <if test="bean.collectCount != null">
+                collect_count = #{bean.collectCount},
+            </if>
             <if test="bean.commentCount != null">
                 comment_count = #{bean.commentCount},
             </if>
@@ -797,6 +823,9 @@
             </if>
             <if test="updateType==1">
                 good_count = good_count+#{changeCount},
+            </if>
+            <if test="updateType==3">
+                collect_count = collect_count+#{changeCount},
             </if>
             <if test="updateType==2">
                 comment_count = comment_count+#{changeCount},

@@ -9,7 +9,6 @@ import com.easybbs.entity.dto.SysSettingDto;
 import com.easybbs.entity.enums.DateTimePatternEnum;
 import com.easybbs.entity.enums.ResponseCodeEnum;
 import com.easybbs.entity.enums.UserOperFrequencyTypeEnum;
-import com.easybbs.entity.enums.UserStatusEnum;
 import com.easybbs.entity.po.UserInfo;
 import com.easybbs.entity.query.*;
 import com.easybbs.entity.vo.ResponseVO;
@@ -60,6 +59,9 @@ public class OperationAspect {
 
     @Resource
     private LikeRecordService likeRecordService;
+
+    @Resource
+    private CollectRecordService collectRecordService;
 
     @Resource
     private UserInfoService userInfoService;
@@ -173,6 +175,21 @@ public class OperationAspect {
                 if (count >= sysSettingDto.getLikeSetting().getLikeDayCountThreshold()) {
                     throw new BusinessException(ResponseCodeEnum.CODE_602);
                 }
+                break;
+
+            case DO_COLLECT:
+                if (count == null) {
+                    CollectRecordQuery recordQuery = new CollectRecordQuery();
+                    recordQuery.setUserId(webUserDto.getUserId());
+                    recordQuery.setCreateTimeStart(curDate);
+                    recordQuery.setCreateTimeEnd(curDate);
+                    count = collectRecordService.findCountByParam(recordQuery);
+
+                }
+                // TODO 这里好像是点赞的限制次数。。。
+//                if (count >= sysSettingDto.getLikeSetting().getLikeDayCountThreshold()) {
+//                    throw new BusinessException(ResponseCodeEnum.CODE_602);
+//                }
                 break;
             case IMAGE_UPLAOD:
                 if (count == null) {

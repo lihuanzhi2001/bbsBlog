@@ -60,13 +60,16 @@ public class ForumArticleController extends BaseController {
     private LikeRecordService likeRecordService;
 
     @Resource
+    private CollectRecordService collectRecordService;
+
+    @Resource
     private UserInfoService userInfoService;
 
     @RequestMapping("/loadArticle")
     public ResponseVO loadArticle(HttpSession session, Integer boardId, Integer pBoardId, Integer orderType, Integer pageNo) {
         ForumArticleQuery articleQuery = new ForumArticleQuery();
         articleQuery.setBoardId(boardId == null || boardId == 0 ? null : boardId);
-        articleQuery.setpBoardId(pBoardId);
+        articleQuery.setPBoardId(pBoardId);
         articleQuery.setPageNo(pageNo);
 
         SessionWebUserDto userDto = getUserInfoFromSession(session);
@@ -111,7 +114,7 @@ public class ForumArticleController extends BaseController {
         title = StringTools.escapeTitle(title);
         SessionWebUserDto userDto = getUserInfoFromSession(session);
         ForumArticle forumArticle = new ForumArticle();
-        forumArticle.setpBoardId(pBoardId);
+        forumArticle.setPBoardId(pBoardId);
         forumArticle.setBoardId(boardId);
         forumArticle.setTitle(title);
         forumArticle.setContent(content);
@@ -161,6 +164,12 @@ public class ForumArticleController extends BaseController {
             if (like != null) {
                 detailVO.setHaveLike(true);
             }
+            // TODO: 新增收藏操作
+            CollectRecord collect = collectRecordService.getUserOperRecordByObjectIdAndUserId(articleId, sessionWebUserDto.getUserId());
+            if (collect != null) {
+                detailVO.setHaveCollect(true);
+            }
+
         }
         return getSuccessResponseVO(detailVO);
     }
@@ -170,6 +179,21 @@ public class ForumArticleController extends BaseController {
     public ResponseVO doLike(HttpSession session, @VerifyParam(required = true) String articleId) {
         SessionWebUserDto userDto = getUserInfoFromSession(session);
         likeRecordService.doLike(articleId, userDto.getUserId(), userDto.getNickName(), OperRecordOpTypeEnum.ARTICLE_LIKE);
+        return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 新增收藏功能。。。
+     *
+     * @param session
+     * @param articleId
+     * @return
+     */
+    @RequestMapping("/doCollect")
+    @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.DO_COLLECT)
+    public ResponseVO doCollect(HttpSession session, @VerifyParam(required = true) String articleId) {
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        collectRecordService.doCollect(articleId, userDto.getUserId(), userDto.getNickName());
         return getSuccessResponseVO(null);
     }
 
@@ -276,7 +300,7 @@ public class ForumArticleController extends BaseController {
         SessionWebUserDto userDto = getUserInfoFromSession(session);
         ForumArticle forumArticle = new ForumArticle();
         forumArticle.setArticleId(articleId);
-        forumArticle.setpBoardId(pBoardId);
+        forumArticle.setPBoardId(pBoardId);
         forumArticle.setBoardId(boardId);
         forumArticle.setTitle(title);
         forumArticle.setContent(content);

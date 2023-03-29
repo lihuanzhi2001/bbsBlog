@@ -1,6 +1,7 @@
 package com.easybbs.entity.vo.web;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import java.util.Date;
 /**
  * 文章信息
  */
+@Data
 public class ForumArticleVO implements Serializable {
 
 
@@ -91,6 +93,11 @@ public class ForumArticleVO implements Serializable {
     private Integer goodCount;
 
     /**
+     * 收藏数
+     */
+    private Integer collectCount;
+
+    /**
      * 评论数
      */
     private Integer commentCount;
@@ -111,157 +118,5 @@ public class ForumArticleVO implements Serializable {
      */
     private Integer status;
 
-    public Integer getAttachmentType() {
-        return attachmentType;
-    }
-
-    public void setAttachmentType(Integer attachmentType) {
-        this.attachmentType = attachmentType;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public void setArticleId(String articleId) {
-        this.articleId = articleId;
-    }
-
-    public String getArticleId() {
-        return this.articleId;
-    }
-
-    public void setBoardId(Integer boardId) {
-        this.boardId = boardId;
-    }
-
-    public Integer getBoardId() {
-        return this.boardId;
-    }
-
-    public void setBoardName(String boardName) {
-        this.boardName = boardName;
-    }
-
-    public String getBoardName() {
-        return this.boardName;
-    }
-
-    public void setpBoardId(Integer pBoardId) {
-        this.pBoardId = pBoardId;
-    }
-
-    public Integer getpBoardId() {
-        return this.pBoardId;
-    }
-
-    public void setpBoardName(String pBoardName) {
-        this.pBoardName = pBoardName;
-    }
-
-    public String getpBoardName() {
-        return this.pBoardName;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUserId() {
-        return this.userId;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public String getNickName() {
-        return this.nickName;
-    }
-
-    public void setUserIpAddress(String userIpAddress) {
-        this.userIpAddress = userIpAddress;
-    }
-
-    public String getUserIpAddress() {
-        return this.userIpAddress;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public void setCover(String cover) {
-        this.cover = cover;
-    }
-
-    public String getCover() {
-        return this.cover;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getContent() {
-        return this.content;
-    }
-
-
-    public void setSummary(String summary) {
-        this.summary = summary;
-    }
-
-    public String getSummary() {
-        return this.summary;
-    }
-
-    public void setPostTime(Date postTime) {
-        this.postTime = postTime;
-    }
-
-    public Date getPostTime() {
-        return this.postTime;
-    }
-
-    public void setReadCount(Integer readCount) {
-        this.readCount = readCount;
-    }
-
-    public Integer getReadCount() {
-        return this.readCount;
-    }
-
-    public void setGoodCount(Integer goodCount) {
-        this.goodCount = goodCount;
-    }
-
-    public Integer getGoodCount() {
-        return this.goodCount;
-    }
-
-    public void setCommentCount(Integer commentCount) {
-        this.commentCount = commentCount;
-    }
-
-    public Integer getCommentCount() {
-        return this.commentCount;
-    }
-
-    public void setTopType(Integer topType) {
-        this.topType = topType;
-    }
-
-    public Integer getTopType() {
-        return this.topType;
-    }
 
 }

@@ -11,10 +11,7 @@ import com.easybbs.entity.enums.ResponseCodeEnum;
 import com.easybbs.entity.enums.UserStatusEnum;
 import com.easybbs.entity.po.ForumArticle;
 import com.easybbs.entity.po.UserInfo;
-import com.easybbs.entity.query.ForumArticleQuery;
-import com.easybbs.entity.query.LikeRecordQuery;
-import com.easybbs.entity.query.UserIntegralRecordQuery;
-import com.easybbs.entity.query.UserMessageQuery;
+import com.easybbs.entity.query.*;
 import com.easybbs.entity.vo.PaginationResultVO;
 import com.easybbs.entity.vo.ResponseVO;
 import com.easybbs.entity.vo.web.ForumArticleVO;
@@ -47,6 +44,9 @@ public class UserCenterController extends BaseController {
     private LikeRecordService likeRecordService;
 
     @Resource
+    private CollectRecordService collectRecordService;
+
+    @Resource
     private UserIntegralRecordService userIntegralRecordService;
 
     @RequestMapping("/getUserInfo")
@@ -66,7 +66,13 @@ public class UserCenterController extends BaseController {
         LikeRecordQuery recordQuery = new LikeRecordQuery();
         recordQuery.setAuthorUserId(userId);
         Integer likeCount = likeRecordService.findCountByParam(recordQuery);
+        // TODO 新增收藏功能
+        CollectRecordQuery collectRecordQuery = new CollectRecordQuery();
+        collectRecordQuery.setAuthorUserId(userId);
+        Integer collectCount = collectRecordService.findCountByParam(collectRecordQuery);
+
         userInfoVO.setLikeCount(likeCount);
+        userInfoVO.setCollectCount(collectCount);
         userInfoVO.setCurrentIntegral(userInfo.getCurrentIntegral());
         return getSuccessResponseVO(userInfoVO);
     }
@@ -113,6 +119,10 @@ public class UserCenterController extends BaseController {
             articleQuery.setCommentUserId(userId);
         } else if (type == 2) {
             articleQuery.setLikeUserId(userId);
+        }
+        // TODO 新增收藏夹功能
+        else if (type == 3) {
+            articleQuery.setCollectUserId(userId);
         }
         //当前用户展示待审核
         SessionWebUserDto userDto = getUserInfoFromSession(session);

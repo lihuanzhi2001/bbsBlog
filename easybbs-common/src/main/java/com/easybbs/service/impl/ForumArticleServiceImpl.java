@@ -300,11 +300,11 @@ public class ForumArticleServiceImpl implements ForumArticleService {
     }
 
     private void resetBoardInfo(Boolean isAdmin, ForumArticle article) {
-        ForumBoard board = forumBoardService.getForumBoardByBoardId(article.getpBoardId());
+        ForumBoard board = forumBoardService.getForumBoardByBoardId(article.getPBoardId());
         if (null == board || board.getPostType() == 0 && !isAdmin) {
             throw new BusinessException("一级板块不存在");
         }
-        article.setpBoardName(board.getBoardName());
+        article.setPBoardName(board.getBoardName());
         if (article.getBoardId() != null && article.getBoardId() != 0) {
             board = forumBoardService.getForumBoardByBoardId(article.getBoardId());
             if (null == board || board.getPostType() == 0 && !isAdmin) {
@@ -370,7 +370,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
     @Override
     public void updateBoard(String articleId, Integer pBoardId, Integer boardId) {
         ForumArticle forumArticle = new ForumArticle();
-        forumArticle.setpBoardId(pBoardId);
+        forumArticle.setPBoardId(pBoardId);
         forumArticle.setBoardId(boardId);
         resetBoardInfo(true, forumArticle);
         forumArticleMapper.updateByArticleId(forumArticle, articleId);
