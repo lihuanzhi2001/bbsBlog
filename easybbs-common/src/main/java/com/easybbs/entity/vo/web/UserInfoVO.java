@@ -66,6 +66,20 @@ public class UserInfoVO implements Serializable {
      */
     public Integer collectCount;
 
+    /**
+     * TODO 关注量
+     */
+    public Integer followCount;
+
+    /**
+     * TODO 粉丝量
+     */
+    public Integer fansCount;
+
+    /**
+     * TODO 新增是否关注标签
+     */
+    public Boolean haveFollow = false;
 
 
 }

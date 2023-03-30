@@ -64,6 +64,9 @@ public class OperationAspect {
     private CollectRecordService collectRecordService;
 
     @Resource
+    private FollowRecordService followRecordService;
+
+    @Resource
     private UserInfoService userInfoService;
 
     @Pointcut("@annotation(com.easybbs.annotation.GlobalInterceptor)")
@@ -126,6 +129,11 @@ public class OperationAspect {
         }
     }
 
+    /**
+     * TODO 这个方法应该是限制评论、点赞。。。次数限制的。。。
+     *
+     * @param typeEnum
+     */
     private void checkFrequency(UserOperFrequencyTypeEnum typeEnum) {
         if (typeEnum == null || typeEnum == UserOperFrequencyTypeEnum.NO_CHECK) {
             return;
@@ -191,6 +199,22 @@ public class OperationAspect {
 //                    throw new BusinessException(ResponseCodeEnum.CODE_602);
 //                }
                 break;
+
+            case DO_FOLLOW:
+                // TODO 新增关注功能
+                if (count == null) {
+                    FollowRecordQuery recordQuery = new FollowRecordQuery();
+                    recordQuery.setUserId(webUserDto.getUserId());
+                    recordQuery.setCreateTimeStart(curDate);
+                    recordQuery.setCreateTimeEnd(curDate);
+                    count = followRecordService.findCountByParam(recordQuery);
+
+                }
+                // TODO 这里好像是点赞的限制次数。。。
+//                if (count >= sysSettingDto.getLikeSetting().getLikeDayCountThreshold()) {
+//                    throw new BusinessException(ResponseCodeEnum.CODE_602);
+//                }
+                break;
             case IMAGE_UPLAOD:
                 if (count == null) {
                     count = 0;
@@ -241,8 +265,6 @@ public class OperationAspect {
 
     /**
      * @Description: 参数校验，后端参数校验 防小人不妨君子，前端已经做了参数校验，绕过前端，后端校验，一律返回 请求参数不正确
-     * @auther: 程序员老罗
-     * @date: 2022/11/22
      * @param: [m, arguments]
      * @return: void
      */

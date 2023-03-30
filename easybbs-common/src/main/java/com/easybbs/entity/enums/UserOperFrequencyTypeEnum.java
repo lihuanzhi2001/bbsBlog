@@ -7,7 +7,8 @@ public enum UserOperFrequencyTypeEnum {
     POST_COMMENT(2, "评价"),
     DO_LIKE(3, "点赞"),
     DO_COLLECT(5, "收藏"),
-    IMAGE_UPLAOD(4, "图片上传");
+    IMAGE_UPLAOD(4, "图片上传"),
+    DO_FOLLOW(6, "关注");
 
 
     private Integer operType;

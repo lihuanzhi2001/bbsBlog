@@ -41,7 +41,7 @@ public class CollectRecordQuery extends BaseParam {
     private String createTimeEnd;
 
     /**
-     *
+     *  作者id
      */
     private String authorUserId;
 

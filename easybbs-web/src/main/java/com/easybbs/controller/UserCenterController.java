@@ -5,16 +5,15 @@ import com.easybbs.annotation.VerifyParam;
 import com.easybbs.controller.base.BaseController;
 import com.easybbs.entity.dto.SessionWebUserDto;
 import com.easybbs.entity.dto.UserMessageCountDto;
-import com.easybbs.entity.enums.ArticleStatusEnum;
-import com.easybbs.entity.enums.MessageTypeEnum;
-import com.easybbs.entity.enums.ResponseCodeEnum;
-import com.easybbs.entity.enums.UserStatusEnum;
+import com.easybbs.entity.enums.*;
+import com.easybbs.entity.po.FollowRecord;
 import com.easybbs.entity.po.ForumArticle;
 import com.easybbs.entity.po.UserInfo;
 import com.easybbs.entity.query.*;
 import com.easybbs.entity.vo.PaginationResultVO;
 import com.easybbs.entity.vo.ResponseVO;
 import com.easybbs.entity.vo.web.ForumArticleVO;
+import com.easybbs.entity.vo.web.UserFollowVo;
 import com.easybbs.entity.vo.web.UserInfoVO;
 import com.easybbs.entity.vo.web.UserMessageVO;
 import com.easybbs.exception.BusinessException;
@@ -26,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/ucenter")
@@ -47,11 +48,17 @@ public class UserCenterController extends BaseController {
     private CollectRecordService collectRecordService;
 
     @Resource
+    private FollowRecordService followRecordService;
+
+    @Resource
     private UserIntegralRecordService userIntegralRecordService;
 
     @RequestMapping("/getUserInfo")
     @GlobalInterceptor(checkParams = true)
-    public ResponseVO getUserInfo(@VerifyParam(required = true) String userId) {
+    public ResponseVO getUserInfo(HttpSession session, @VerifyParam(required = true) String userId) {
+
+        SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
+
         UserInfo userInfo = userInfoService.getUserInfoByUserId(userId);
         if (null == userInfo || UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
             throw new BusinessException(ResponseCodeEnum.CODE_404);
@@ -71,8 +78,29 @@ public class UserCenterController extends BaseController {
         collectRecordQuery.setAuthorUserId(userId);
         Integer collectCount = collectRecordService.findCountByParam(collectRecordQuery);
 
+        // TODO 新增用户关注功能
+        FollowRecordQuery followRecordQuery = new FollowRecordQuery();
+        // TODO 关注量
+        followRecordQuery.setUserId(userId);
+        Integer followCount = followRecordService.findCountByParam(followRecordQuery);
+        // TODO 粉丝量
+        followRecordQuery = new FollowRecordQuery();
+        followRecordQuery.setFollowedUserId(userId);
+        Integer fansCount = followRecordService.findCountByParam(followRecordQuery);
+
+        // TODO 判断当前用户是否已关注
+        if (sessionWebUserDto != null) {
+            FollowRecord followRecord = followRecordService.getUserFollowRecordByUserIdAndFollowedUserId(sessionWebUserDto.getUserId(), userId);
+            if (followRecord != null) {
+                userInfoVO.setHaveFollow(true);
+            }
+        }
+
         userInfoVO.setLikeCount(likeCount);
         userInfoVO.setCollectCount(collectCount);
+        userInfoVO.setFollowCount(followCount);
+        userInfoVO.setFansCount(fansCount);
+
         userInfoVO.setCurrentIntegral(userInfo.getCurrentIntegral());
         return getSuccessResponseVO(userInfoVO);
     }
@@ -134,6 +162,98 @@ public class UserCenterController extends BaseController {
         PaginationResultVO<ForumArticle> result = forumArticleService.findListByPage(articleQuery);
         return getSuccessResponseVO(convert2PaginationVO(result, ForumArticleVO.class));
     }
+
+    // TODO 新增查询 (关注、粉丝) 功能
+
+    /**
+     * 查询 关注、粉丝 功能
+     *
+     * @param session
+     * @param userId
+     * @return
+     */
+    @RequestMapping("/loadUserFollow")
+    @GlobalInterceptor(checkParams = true)
+    public ResponseVO userFollow(HttpSession session, @VerifyParam(required = true) String userId,
+                                 @VerifyParam(required = true) Integer type) {
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+
+        UserInfo userInfo = userInfoService.getUserInfoByUserId(userId);
+        if (null == userInfo || UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
+            throw new BusinessException(ResponseCodeEnum.CODE_404);
+        }
+        FollowRecordQuery followRecordQuery = new FollowRecordQuery();
+        followRecordQuery.setOrderBy("create_time desc");
+        // type (4: 关注, 5: 粉丝)
+        if (type == 4) {
+            followRecordQuery.setUserId(userId);
+        } else if (type == 5) {
+            followRecordQuery.setFollowedUserId(userId);
+        }
+        PaginationResultVO<FollowRecord> result = followRecordService.findListByPage(followRecordQuery);
+        List<String> userIds = new ArrayList<>();
+
+        for (FollowRecord followRecord : result.getList()) {
+            // 获取所有关注用户的userId
+            if (type == 4)
+                userIds.add(followRecord.getFollowedUserId());
+                // 获取所有粉丝的userId
+            else if (type == 5)
+                userIds.add(followRecord.getUserId());
+        }
+
+        List<UserFollowVo> ufList = new ArrayList<>();
+        for (String uId : userIds) {
+            UserInfo uInfo = userInfoService.getUserInfoByUserId(uId);
+            if (uInfo == null) {
+                continue;
+            }
+            UserFollowVo ufo = new UserFollowVo();
+            ufo.setUserId(uInfo.getUserId());
+            ufo.setNickName(uInfo.getNickName());
+            ufo.setPersonDescription(uInfo.getPersonDescription());
+            ufo.setSex(uInfo.getSex());
+            // 如果没有登录就直接跳过，不就行判断是否关注操作
+            if (userDto == null) {
+                ufList.add(ufo);
+                continue;
+            }
+            // 当前用户是登录状态
+            FollowRecord followRecord = followRecord = followRecordService.getUserFollowRecordByUserIdAndFollowedUserId(userDto.getUserId(), uId);
+            if (followRecord != null) {
+                ufo.setHaveFollow(true);
+            }
+            ufList.add(ufo);
+        }
+        // TODO 这里只是把关注、粉丝的数据查出来而已，还需要进行封装用户的其他信息。。。
+//        PaginationResultVO<FollowRecord> result
+        PaginationResultVO<UserFollowVo> ufvResult = new PaginationResultVO<>();
+        ufvResult.setList(ufList);
+        ufvResult.setPageNo(result.getPageNo());
+        ufvResult.setPageSize(result.getPageSize());
+        ufvResult.setPageTotal(result.getPageTotal());
+        ufvResult.setTotalCount(result.getTotalCount());
+        return getSuccessResponseVO(ufvResult);
+
+    }
+
+    // TODO 新增用户关注功能
+
+    /**
+     * 新增收藏功能。。。
+     *
+     * @param session
+     * @param followedUserId
+     * @return
+     */
+    @RequestMapping("/doFollow")
+    @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.DO_FOLLOW)
+    public ResponseVO doCollect(HttpSession session, @VerifyParam(required = true) String followedUserId) {
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        followRecordService.doFollow(userDto.getUserId(), followedUserId);
+        return getSuccessResponseVO(null);
+    }
+
 
     @RequestMapping("/getMessageCount")
     @GlobalInterceptor(checkLogin = true)
