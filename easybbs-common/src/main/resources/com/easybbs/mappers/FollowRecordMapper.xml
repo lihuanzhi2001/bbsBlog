@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easybbs.mappers.FollowRecordMapper">
+
+    <!--实体映射-->
+    <resultMap id="base_result_map" type="com.easybbs.entity.po.FollowRecord">
+        <!--自增ID-->
+        <id column="id" property="id"/>
+        <!--用户ID(粉丝id)-->
+        <result column="user_id" property="userId"/>
+        <!--用户ID(粉丝id)-->
+        <result column="followed_user_id" property="followedUserId"/>
+        <!--发布时间-->
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+
+    <!-- 通用查询结果列-->
+    <sql id="base_column_list">
+		 id,user_id,followed_user_id,create_time
+	</sql>
+
+    <sql id="base_condition_filed">
+        <if test="query.id != null">
+            and id = #{query.opId}
+        </if>
+        <if test="query.userId != null and query.userId!=''">
+            and user_id = #{query.userId}
+        </if>
+        <if test="query.followedUserId != null and query.followedUserId!=''">
+            and followed_user_id = #{query.followedUserId}
+        </if>
+        <if test="query.createTime != null and query.createTime!=''">
+            <![CDATA[ and  create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+        </if>
+    </sql>
+    <!-- 通用条件列-->
+    <sql id="base_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+        </where>
+    </sql>
+
+    <!-- 通用查询条件列-->
+    <sql id="query_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+            <if test="query.userIdFuzzy!= null  and query.userIdFuzzy!=''">
+                and user_id like concat('%', #{query.userIdFuzzy}, '%')
+            </if>
+            <if test="query.followedUserIdFuzzy!= null  and query.followedUserIdFuzzy!=''">
+                and followed_user_id like concat('%', #{query.followedUserIdFuzzy}, '%')
+            </if>
+            <if test="query.createTimeStart!= null and query.createTimeStart!=''">
+                <![CDATA[ and  create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+            </if>
+            <if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+                <![CDATA[ and  create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+            </if>
+
+        </where>
+    </sql>
+
+    <!-- 查询集合-->
+    <select id="selectList" resultMap="base_result_map">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM follow_record
+        <include refid="query_condition"/>
+        <if test="query.orderBy!=null">
+            order by ${query.orderBy}
+        </if>
+        <if test="query.simplePage!=null">
+            limit #{query.simplePage.start},#{query.simplePage.end}
+        </if>
+    </select>
+
+    <!-- 查询数量-->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT count(1) FROM follow_record
+        <include refid="query_condition"/>
+    </select>
+
+    <!-- 插入 （匹配有值的字段）-->
+    <insert id="insert" parameterType="com.easybbs.entity.po.FollowRecord">
+        <selectKey keyProperty="bean.id" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO follow_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.userId != null">
+                user_id,
+            </if>
+            <if test="bean.followedUserId != null">
+                followed_user_id,
+            </if>
+            <if test="bean.createTime != null">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.userId!=null">
+                #{bean.userId},
+            </if>
+            <if test="bean.followedUserId!=null">
+                #{bean.followedUserId},
+            </if>
+            <if test="bean.createTime!=null">
+                #{bean.createTime},
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 插入或者更新 （匹配有值的字段）-->
+    <insert id="insertOrUpdate" parameterType="com.easybbs.entity.po.FollowRecord">
+        INSERT INTO follow_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.id != null">
+                id,
+            </if>
+            <if test="bean.userId != null">
+                user_id,
+            </if>
+            <if test="bean.followedUserId != null">
+                followed_user_id,
+            </if>
+            <if test="bean.createTime != null">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.id!=null">
+                #{bean.id},
+            </if>
+            <if test="bean.userId!=null">
+                #{bean.userId},
+            </if>
+            <if test="bean.followedUserId!=null">
+                #{bean.followedUserId},
+            </if>
+            <if test="bean.createTime!=null">
+                #{bean.createTime},
+            </if>
+        </trim>
+        on DUPLICATE key update
+        <trim prefix="" suffix="" suffixOverrides=",">
+            <if test="bean.userId!=null">
+                user_id = VALUES(user_id),
+            </if>
+            <if test="bean.followedUserId!=null">
+                followed_user_id = VALUES(followed_user_id),
+            </if>
+            <if test="bean.createTime!=null">
+                create_time = VALUES(create_time),
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 添加 （批量插入）-->
+    <insert id="insertBatch" parameterType="com.easybbs.entity.po.FollowRecord" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO follow_record(
+        user_id,
+        followed_user_id,
+        create_time
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.userId},
+            #{item.followedUserId},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量新增修改 （批量插入）-->
+    <insert id="insertOrUpdateBatch" parameterType="com.easybbs.entity.po.FollowRecord">
+        INSERT INTO follow_record(
+        user_id,
+        followed_user_id,
+        create_time
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.userId},
+            #{item.followedUserId},
+            #{item.createTime}
+            )
+        </foreach>
+        on DUPLICATE key update
+        user_id = VALUES(user_id),
+        followed_user_id = VALUES(followed_user_id),
+        create_time = VALUES(create_time)
+    </insert>
+
+    <!-- 根据id删除-->
+    <delete id="deleteById">
+		delete from follow_record where id=#{id}
+	</delete>
+
+    <!-- 根据PrimaryKey(id)获取对象-->
+    <select id="selectById" resultMap="base_result_map">
+        select
+        <include refid="base_column_list"/>
+        from follow_record where id=#{id}
+    </select>
+
+    <!-- 根据ObjectIdAndUserIdAndOpType删除-->
+    <delete id="deleteByUserIdAndFollowedUserId">
+		delete from follow_record where user_id=#{userId} and followed_user_id=#{followedUserId}
+	</delete>
+
+    <!-- 根据PrimaryKey获取对象-->
+    <select id="selectByUserIdAndFollowedUserId" resultMap="base_result_map">
+        select
+        <include refid="base_column_list"/>
+        from follow_record where user_id=#{userId} and followed_user_id=#{followedUserId}
+    </select>
+
+
+</mapper>
