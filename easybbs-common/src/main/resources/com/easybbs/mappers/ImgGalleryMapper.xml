@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.easybbs.mappers.ImgGalleryMapper">
+
+    <!--实体映射-->
+    <resultMap id="base_result_map" type="com.easybbs.entity.po.ImgGallery">
+        <!--自增ID-->
+        <id column="id" property="id"/>
+        <!--图片-->
+        <result column="img" property="img"/>
+        <!--分类id-->
+        <result column="category_id" property="categoryId"/>
+        <!--分类名称-->
+        <result column="category_name" property="categoryName"/>
+        <!--用户id-->
+        <result column="user_id" property="userId"/>
+        <!--昵称-->
+        <result column="nickname" property="nickName"/>
+        <!--创建时间-->
+        <result column="create_time" property="createTime"/>
+        <!--修改时间-->
+        <result column="update_time" property="updateTime"/>
+        <!--状态(0 - 未审核, 1 - 已审核, 2 - 已冻结)-->
+        <result column="status" property="status"/>
+        <!--信息状态(0 - 隐藏, 1 - 展示)-->
+        <result column="status2" property="status2"/>
+        <!--冻结状态(0 - 未冻结, 1 - 已冻结)-->
+        <result column="status3" property="status3"/>
+    </resultMap>
+
+    <!-- 通用查询结果列-->
+    <sql id="base_column_list">
+        id,img,category_id,category_name,user_id,nickname,create_time,update_time,status,status2,status3
+    </sql>
+
+    <sql id="base_condition_filed">
+        <if test="query.id != null">
+            and id = #{query.id}
+        </if>
+        <if test="query.categoryId != null">
+            and category_id = #{query.categoryId}
+        </if>
+        <if test="query.categoryName != null and query.categoryName!=''">
+            and category_name = #{query.categoryName}
+        </if>
+        <if test="query.userId != null">
+            and user_id = #{query.userId}
+        </if>
+        <if test="query.nickname != null and query.nickname != ''">
+            and nickname = #{query.nickName}
+        </if>
+        <if test="query.createTime != null and query.createTime!=''">
+            <![CDATA[ and  create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="query.updateTime != null and query.updateTime!=''">
+            <![CDATA[ and  update_time=str_to_date(#{query.updateTime}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="query.status != null">
+            and status = #{query.status}
+        </if>
+        <if test="query.status2 != null">
+            and status2 = #{query.status2}
+        </if>
+        <if test="query.status3 != null">
+            and status3 = #{query.status3}
+        </if>
+    </sql>
+
+    <!-- 通用条件列-->
+    <sql id="base_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+        </where>
+    </sql>
+
+    <!-- 通用查询条件列-->
+    <sql id="query_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+            <if test="query.categoryNameFuzzy!= null  and query.categoryNameFuzzy!=''">
+                and category_name like concat('%', #{query.categoryNameFuzzy}, '%')
+            </if>
+            <if test="query.nickNameFuzzy!= null  and query.nickNameFuzzy!=''">
+                and nickname like concat('%', #{query.nickNameFuzzy}, '%')
+            </if>
+
+            <if test="query.createTimeStart!= null and query.createTimeStart!=''">
+                <![CDATA[ and  create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+            </if>
+            <if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+                <![CDATA[ and  create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+            </if>
+            <if test="query.updateTimeStart!= null and query.updateTimeStart!=''">
+                <![CDATA[ and  update_time>=str_to_date(#{query.updateTimeStart}, '%Y-%m-%d') ]]>
+            </if>
+            <if test="query.updateTimeEnd!= null and query.updateTimeEnd!=''">
+                <![CDATA[ and  update_time< date_sub(str_to_date(#{query.updateTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+            </if>
+
+        </where>
+    </sql>
+
+    <!-- 查询集合-->
+    <select id="selectList" resultMap="base_result_map">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM img_gallery
+        <include refid="query_condition"/>
+        <if test="query.orderBy!=null">
+            order by ${query.orderBy}
+        </if>
+        <if test="query.simplePage!=null">
+            limit #{query.simplePage.start},#{query.simplePage.end}
+        </if>
+    </select>
+
+    <!-- 查询数量-->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT count(1) FROM img_gallery
+        <include refid="query_condition"/>
+    </select>
+
+    <!-- 插入 （匹配有值的字段）-->
+    <insert id="insert" parameterType="com.easybbs.entity.po.ImgGallery">
+        <selectKey keyProperty="bean.id" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO img_gallery
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.img != null">
+                img,
+            </if>
+            <if test="bean.categoryId != null">
+                category_id,
+            </if>
+            <if test="bean.categoryName != null">
+                category_name,
+            </if>
+            <if test="bean.userId != null">
+                user_id,
+            </if>
+            <if test="bean.nickName != null">
+                nickname,
+            </if>
+            <if test="bean.createTime != null">
+                create_time,
+            </if>
+            <if test="bean.updateTime != null">
+                update_time,
+            </if>
+            <if test="bean.status != null">
+                status,
+            </if>
+            <if test="bean.status2 != null">
+                status2,
+            </if>
+            <if test="bean.status3 != null">
+                status3,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.img != null">
+                #{bean.img},
+            </if>
+            <if test="bean.categoryId != null">
+                #{bean.categoryId},
+            </if>
+            <if test="bean.categoryName != null">
+                #{bean.categoryName},
+            </if>
+            <if test="bean.userId != null">
+                #{bean.userId},
+            </if>
+            <if test="bean.nickName != null">
+                #{bean.nickName},
+            </if>
+            <if test="bean.createTime != null">
+                #{bean.createTime},
+            </if>
+            <if test="bean.updateTime != null">
+                #{bean.updateTime},
+            </if>
+            <if test="bean.status != null">
+                #{bean.status},
+            </if>
+            <if test="bean.status2 != null">
+                #{bean.status2},
+            </if>
+            <if test="bean.status3 != null">
+                #{bean.status3},
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 插入或者更新 （匹配有值的字段）-->
+    <insert id="insertOrUpdate" parameterType="com.easybbs.entity.po.ImgGallery">
+        INSERT INTO img_gallery
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.img != null">
+                img,
+            </if>
+            <if test="bean.categoryId != null">
+                category_id,
+            </if>
+            <if test="bean.categoryName != null">
+                category_name,
+            </if>
+            <if test="bean.userId != null">
+                user_id,
+            </if>
+            <if test="bean.nickName != null">
+                nickname,
+            </if>
+            <if test="bean.createTime != null">
+                create_time,
+            </if>
+            <if test="bean.updateTime != null">
+                update_time,
+            </if>
+            <if test="bean.status != null">
+                status,
+            </if>
+            <if test="bean.status2 != null">
+                status2,
+            </if>
+            <if test="bean.status3 != null">
+                status3,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.img != null">
+                #{bean.img},
+            </if>
+            <if test="bean.categoryId != null">
+                #{bean.categoryId},
+            </if>
+            <if test="bean.categoryName != null">
+                #{bean.categoryName},
+            </if>
+            <if test="bean.userId != null">
+                #{bean.userId},
+            </if>
+            <if test="bean.nickName != null">
+                #{bean.nickName},
+            </if>
+            <if test="bean.createTime != null">
+                #{bean.createTime},
+            </if>
+            <if test="bean.updateTime != null">
+                #{bean.updateTime},
+            </if>
+            <if test="bean.status != null">
+                #{bean.status},
+            </if>
+            <if test="bean.status2 != null">
+                #{bean.status2},
+            </if>
+            <if test="bean.status3 != null">
+                #{bean.status3},
+            </if>
+        </trim>
+        on DUPLICATE key update
+        <trim prefix="" suffix="" suffixOverrides=",">
+            <if test="bean.name != null">
+                `name` = VALUES(`name`),
+            </if>
+            <if test="bean.img != null">
+                img = VALUES(img),
+            </if>
+            <if test="bean.categoryId != null">
+                category_id = VALUES(category_id),
+            </if>
+            <if test="bean.categoryName != null">
+                category_name = VALUES(category_name),
+            </if>
+            <if test="bean.userId != null">
+                user_id = VALUES(user_id),
+            </if>
+            <if test="bean.nickName != null">
+                nickname = VALUES(nickname),
+            </if>
+            <if test="bean.createTime != null">
+                create_time = VALUES(create_time),
+            </if>
+            <if test="bean.updateTime != null">
+                update_time = VALUES(update_time),
+            </if>
+            <if test="bean.status != null">
+                status = VALUES(status),
+            </if>
+            <if test="bean.status2 != null">
+                status2 = VALUES(status2),
+            </if>
+            <if test="bean.status3 != null">
+                status3 = VALUES(status3),
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id查询对象-->
+    <select id="getImgGalleryById" resultMap="base_result_map">
+        select
+        <include refid="base_column_list"/>
+        from img_gallery where id=#{id}
+    </select>
+
+    <!--根据id修改-->
+    <update id="updateImgGalleryById" parameterType="com.easybbs.entity.po.ImgGallery">
+        UPDATE img_gallery
+        <set>
+            <if test="bean.img != null">
+                img = #{bean.img},
+            </if>
+            <if test="bean.categoryId != null">
+                category_id = #{bean.categoryId},
+            </if>
+            <if test="bean.categoryName != null">
+                category_name = #{bean.categoryName},
+            </if>
+            <if test="bean.userId != null">
+                user_id = #{bean.userId},
+            </if>
+            <if test="bean.nickName != null">
+                nickname = #{bean.nickName},
+            </if>
+            <if test="bean.createTime != null">
+                create_time = #{bean.createTime},
+            </if>
+            <if test="bean.updateTime != null">
+                update_time = #{bean.updateTime},
+            </if>
+            <if test="bean.status != null">
+                status = #{bean.status},
+            </if>
+            <if test="bean.status2 != null">
+                status2 = #{bean.status2},
+            </if>
+            <if test="bean.status2 != null">
+                status3 = #{bean.status3},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据id删除-->
+    <delete id="deleteImgGalleryById">
+        delete from img_gallery where id=#{id}
+    </delete>
+
+    <!--根据id修改分类-->
+    <update id="updateImgGalleryCategoryById">
+        UPDATE img_gallery
+        <set>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="categoryName != null">
+                category_name = #{categoryName},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据id修改状态-->
+    <update id="updateImgGalleryStatusById">
+        UPDATE img_gallery
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据id修改信息状态-->
+    <update id="updateImgGalleryStatus2ById">
+        UPDATE img_gallery
+        <set>
+            <if test="status2 != null">
+                status2 = #{status2},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <update id="updateImgGalleryStatus3ById">
+        UPDATE img_gallery
+        <set>
+            <if test="status3 != null">
+                status3 = #{status3},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+
+</mapper>

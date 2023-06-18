@@ -6,6 +6,7 @@ import com.easybbs.controller.base.BaseController;
 import com.easybbs.entity.constants.Constants;
 import com.easybbs.entity.dto.CreateImageCode;
 import com.easybbs.entity.dto.SessionWebUserDto;
+import com.easybbs.entity.dto.SysSetting4AuditDto;
 import com.easybbs.entity.dto.SysSetting4CommentDto;
 import com.easybbs.entity.enums.VerifyRegexEnum;
 import com.easybbs.entity.vo.ResponseVO;
@@ -33,11 +34,7 @@ public class AccountController extends BaseController {
     private EmailCodeService emailCodeService;
 
     /**
-     * @Description: 验证码
-     * @auther: laoluo
-     * @date: 17:28 2022/11/20
-     * @param: [request, response, session]
-     * @return: void
+     * 验证码
      */
     @RequestMapping(value = "/checkCode")
     public void checkCode(HttpServletResponse response, HttpSession session, Integer type) throws
@@ -74,10 +71,53 @@ public class AccountController extends BaseController {
         }
     }
 
+    /**
+     * 新增的简单发送邮件验证码
+     *
+     * @param session
+     * @param email
+     * @param type
+     * @return
+     */
+    @RequestMapping("/sendEmailCode2")
+    @GlobalInterceptor(checkParams = true)
+    public ResponseVO sendEmailCode2(HttpSession session,
+                                     @VerifyParam(required = true) String email,
+                                     @VerifyParam(required = true) Integer type) {
+        try {
+            emailCodeService.sendEmailCode(email, type);
+            return getSuccessResponseVO(null);
+        } finally {
+            session.removeAttribute(Constants.CHECK_CODE_KEY_EMAIL);
+        }
+    }
+
+    // TODO: old register
+//    @RequestMapping("/register")
+//    @GlobalInterceptor(checkParams = true)
+//    public ResponseVO register(HttpSession session,
+//                               @VerifyParam(required = true) String email,
+//                               @VerifyParam(required = true, max = 20) String nickName,
+//                               @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
+//                               @VerifyParam(required = true) String checkCode) {
+////                               @VerifyParam(required = true) String emailCode
+//        try {
+//            if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
+//                throw new BusinessException("图片验证码不正确");
+//            }
+////            userInfoService.register(email, nickName, password, emailCode);
+//            userInfoService.register(email, nickName, password);
+//            return getSuccessResponseVO(null);
+//        } finally {
+//            session.removeAttribute(Constants.CHECK_CODE_KEY);
+//        }
+//    }
+
+    // TODO: new register
     @RequestMapping("/register")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO register(HttpSession session,
-                               @VerifyParam(required = true) String email,
+                               @VerifyParam(required = true) String username,
                                @VerifyParam(required = true, max = 20) String nickName,
                                @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
                                @VerifyParam(required = true) String checkCode) {
@@ -87,7 +127,7 @@ public class AccountController extends BaseController {
                 throw new BusinessException("图片验证码不正确");
             }
 //            userInfoService.register(email, nickName, password, emailCode);
-            userInfoService.register(email, nickName, password);
+            userInfoService.register(username, nickName, password);
             return getSuccessResponseVO(null);
         } finally {
             session.removeAttribute(Constants.CHECK_CODE_KEY);
@@ -95,23 +135,20 @@ public class AccountController extends BaseController {
     }
 
     /**
-     * @Description: 登录
-     * @auther: laoluo
-     * @date: 17:34 2022/11/20
-     * @param: [session, account, password, checkCode]
-     * @return: com.easybbs.entity.vo.ResponseVO
+     * 登录
      */
     @RequestMapping("/login")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO login(HttpSession session, HttpServletRequest request,
-                            @VerifyParam(required = true) String email,
+                            @VerifyParam(required = true) String username,
                             @VerifyParam(required = true) String password,
                             @VerifyParam(required = true) String checkCode) {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
                 throw new BusinessException("图片验证码不正确");
             }
-            SessionWebUserDto sessionWebUserDto = userInfoService.login(email, password, getIpAddr(request));
+            // 校验用户名
+            SessionWebUserDto sessionWebUserDto = userInfoService.login(username, password, getIpAddr(request));
             session.setAttribute(Constants.SESSION_KEY, sessionWebUserDto);
             return getSuccessResponseVO(sessionWebUserDto);
         } finally {
@@ -119,22 +156,34 @@ public class AccountController extends BaseController {
         }
     }
 
-    @RequestMapping("/resetPwd")
+    /*TODO: 根据邮箱修改密码*/
+    @RequestMapping("/resetPwdByEmail")
     @GlobalInterceptor(checkParams = true)
-    public ResponseVO resetPwd(HttpSession session,
-                               String email,
-                               @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
-                               @VerifyParam(required = true) String checkCode,
-                               @VerifyParam(required = true) String emailCode) {
+    public ResponseVO resetPwdByEmail(HttpSession session,
+                                      String email,
+                                      @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
+                                      @VerifyParam(required = true) String checkCode,
+                                      @VerifyParam(required = true) String emailCode) {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
                 throw new BusinessException("图片验证码不正确");
             }
-            userInfoService.resetPwd(email, password, emailCode);
+            userInfoService.resetPwdByEmail(email, password, emailCode);
             return getSuccessResponseVO(null);
         } finally {
             session.removeAttribute(Constants.CHECK_CODE_KEY);
         }
+    }
+
+    /*TODO: 根据旧密码更新密码*/
+    @RequestMapping("/resetPwdByOldPwd")
+    @GlobalInterceptor(checkParams = true)
+    public ResponseVO resetPwdByOldPwd(HttpSession session,
+                                       String username,
+                                       @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String oldPassword,
+                                       @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String newPassword) {
+        userInfoService.resetPwdByOldPwd(username, oldPassword, newPassword);
+        return getSuccessResponseVO(null);
     }
 
     @RequestMapping("/getUserInfo")
@@ -155,9 +204,14 @@ public class AccountController extends BaseController {
     @GlobalInterceptor()
     public ResponseVO getSysSetting() {
         SysSetting4CommentDto commentDto = SysCacheUtils.getSysSetting().getCommentSetting();
+        SysSetting4AuditDto auditStting = SysCacheUtils.getSysSetting().getAuditStting();
+
         Boolean commentOpen = commentDto == null ? true : commentDto.getCommentOpen();
+        Boolean noAuditPostOpen = auditStting == null ? true : auditStting.getPostAudit();
+
         SysSettingVO sysSettingVO = new SysSettingVO();
         sysSettingVO.setCommentOpen(commentOpen);
+        sysSettingVO.setNoAuditPost(noAuditPostOpen);
         return getSuccessResponseVO(sysSettingVO);
     }
 

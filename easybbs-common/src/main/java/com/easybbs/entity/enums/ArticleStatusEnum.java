@@ -3,7 +3,10 @@ package com.easybbs.entity.enums;
 public enum ArticleStatusEnum {
     DEL(-1, "已删除"),
     NO_AUDIT(0, "待审核"),
-    AUDIT(1, "已审核");
+    AUDIT(1, "已审核"),
+    NO_POST(2, "未发布"),
+    POST(3, "已经发布"),
+    ERROR_AUDIT(4, "审核未通过");
 
 
     private Integer status;

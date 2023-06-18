@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.easybbs.mappers.UserPermissionMapper">
+    <!--实体映射-->
+    <resultMap id="base_result_map" type="com.easybbs.entity.po.UserPermission">
+        <!--userId-->
+        <result column="user_id" property="userId"/>
+        <!--用户权限设置信息-->
+        <result column="json_permission" property="jsonPermission"/>
+    </resultMap>
+
+    <!-- 通用查询结果列-->
+    <sql id="base_column_list">
+		 user_id,json_permission
+	</sql>
+
+    <sql id="base_condition_filed">
+        <if test="query.userId != null and query.userId!=''">
+            and user_id = #{query.userId}
+        </if>
+        <if test="query.jsonPermission != null and query.jsonPermission!=''">
+            and json_permission = #{query.jsonPermission}
+        </if>
+    </sql>
+    <!-- 通用条件列-->
+    <sql id="base_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+        </where>
+    </sql>
+
+    <!-- 通用查询条件列-->
+    <sql id="query_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+            <if test="query.userIdFuzzy!= null  and query.userIdFuzzy!=''">
+                and user_id like concat('%', #{query.userIdFuzzy}, '%')
+            </if>
+            <if test="query.jsonPermissionFuzzy!= null  and query.jsonPermissionFuzzy!=''">
+                and json_permission like concat('%', #{query.jsonPermissionFuzzy}, '%')
+            </if>
+        </where>
+    </sql>
+
+    <!-- 查询集合-->
+    <select id="selectList" resultMap="base_result_map">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM user_permission
+        <include refid="query_condition"/>
+        <if test="query.orderBy!=null">
+            order by ${query.orderBy}
+        </if>
+        <if test="query.simplePage!=null">
+            limit #{query.simplePage.start},#{query.simplePage.end}
+        </if>
+    </select>
+
+    <!-- 查询数量-->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT count(1) FROM user_permission
+        <include refid="query_condition"/>
+    </select>
+
+
+    <!-- 插入 （匹配有值的字段）-->
+    <insert id="insert" parameterType="com.easybbs.entity.po.UserPermission">
+        INSERT INTO user_permission
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.userId != null">
+                user_id,
+            </if>
+            <if test="bean.jsonPermission != null">
+                json_permission,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.userId!=null">
+                #{bean.userId},
+            </if>
+            <if test="bean.jsonPermission!=null">
+                #{bean.jsonPermission},
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 插入或者更新 （匹配有值的字段）-->
+    <insert id="insertOrUpdate" parameterType="com.easybbs.entity.po.UserPermission">
+        INSERT INTO user_permission
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.userId != null">
+                user_id,
+            </if>
+            <if test="bean.jsonPermission != null">
+                json_permission,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.userId!=null">
+                #{bean.userId},
+            </if>
+            <if test="bean.jsonPermission!=null">
+                #{bean.jsonPermission},
+            </if>
+        </trim>
+        on DUPLICATE key update
+        <trim prefix="" suffix="" suffixOverrides=",">
+            <if test="bean.userId!=null">
+                user_id = VALUES(user_id),
+            </if>
+            <if test="bean.jsonPermission!=null">
+                json_permission = VALUES(json_permission),
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据userId修改-->
+    <update id="updateByUserId" parameterType="com.easybbs.entity.po.UserPermission">
+        UPDATE user_permission
+        <set>
+            <if test="bean.jsonPermission != null">
+                json_permission = #{bean.jsonPermission},
+            </if>
+        </set>
+        where user_id=#{userId}
+    </update>
+
+    <!--根据userId删除-->
+    <delete id="deleteByUserId">
+        delete from user_permission where user_id=#{userId}
+    </delete>
+
+    <!--根据userId查询-->
+    <select id="selectByUserId" resultMap="base_result_map">
+        select
+        <include refid="base_column_list"/>
+        from user_permission where user_id=#{userId}
+    </select>
+
+</mapper>

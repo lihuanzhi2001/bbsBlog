@@ -6,20 +6,21 @@ import com.easybbs.controller.base.BaseController;
 import com.easybbs.entity.config.WebConfig;
 import com.easybbs.entity.constants.Constants;
 import com.easybbs.entity.dto.SessionWebUserDto;
+import com.easybbs.entity.dto.SysSetting4AuditDto;
 import com.easybbs.entity.enums.*;
 import com.easybbs.entity.po.*;
-import com.easybbs.entity.query.ForumArticleAttachmentQuery;
 import com.easybbs.entity.query.ForumArticleQuery;
 import com.easybbs.entity.vo.PaginationResultVO;
 import com.easybbs.entity.vo.ResponseVO;
 import com.easybbs.entity.vo.web.FormArticleDetailVO;
 import com.easybbs.entity.vo.web.FormArticleUpdateDetailVO;
-import com.easybbs.entity.vo.web.ForumArticleAttachmentVo;
 import com.easybbs.entity.vo.web.ForumArticleVO;
 import com.easybbs.exception.BusinessException;
 import com.easybbs.service.*;
 import com.easybbs.utils.CopyTools;
+import com.easybbs.utils.JsonUtils;
 import com.easybbs.utils.StringTools;
+import com.easybbs.utils.SysCacheUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,24 +66,36 @@ public class ForumArticleController extends BaseController {
     @Resource
     private UserInfoService userInfoService;
 
+    @Resource
+    private UserPermissionService userPermissionService;
+
     @RequestMapping("/loadArticle")
     public ResponseVO loadArticle(HttpSession session, Integer boardId, Integer pBoardId, Integer orderType, Integer pageNo) {
         ForumArticleQuery articleQuery = new ForumArticleQuery();
         articleQuery.setBoardId(boardId == null || boardId == 0 ? null : boardId);
-        articleQuery.setPBoardId(pBoardId);
+        articleQuery.setpBoardId(pBoardId);
         articleQuery.setPageNo(pageNo);
 
         SessionWebUserDto userDto = getUserInfoFromSession(session);
-        if (userDto != null) {
-            articleQuery.setCurrentUserId(userDto.getUserId());
-        } else {
-            articleQuery.setStatus(ArticleStatusEnum.AUDIT.getStatus());
-        }
+//        if (userDto != null) {
+//            articleQuery.setCurrentUserId(userDto.getUserId());
+//        } else {
+////            articleQuery.setStatus(ArticleStatusEnum.AUDIT.getStatus());
+//            articleQuery.setStatus(ArticleStatusEnum.POST.getStatus());
+//        }
+        articleQuery.setStatus2(ArticleStatusEnum.POST.getStatus());
         ArticleOrderTypeEnum orderTypeEnum = ArticleOrderTypeEnum.getByType(orderType);
         orderTypeEnum = orderTypeEnum == null ? ArticleOrderTypeEnum.HOT : orderTypeEnum;
         articleQuery.setOrderBy(orderTypeEnum.getOrderSql());
         PaginationResultVO resultVO = forumArticleService.findListByPage(articleQuery);
-        return getSuccessResponseVO(convert2PaginationVO(resultVO, ForumArticleVO.class));
+        // TODO 这里先封装一下这个管理管理员type
+        PaginationResultVO<ForumArticleVO> favo = convert2PaginationVO(resultVO, ForumArticleVO.class);
+        for (ForumArticleVO forumArticleVO : favo.getList()) {
+            UserInfo uinfo = userInfoService.getUserInfoByUserId(forumArticleVO.getUserId());
+            forumArticleVO.setType(uinfo.getStatus());
+        }
+//        return getSuccessResponseVO(convert2PaginationVO(resultVO, ForumArticleVO.class));
+        return getSuccessResponseVO(favo);
     }
 
 
@@ -97,8 +110,10 @@ public class ForumArticleController extends BaseController {
         return getSuccessResponseVO(forumBoardService.getBoardTree(postType));
     }
 
+    /*发布文章、编辑文章接口*/
     @RequestMapping("/postArticle")
-    @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.POST_ARTICLE)
+//    @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.POST_ARTICLE)
+    @GlobalInterceptor(checkLogin = true, checkParams = true)
     public ResponseVO postArticle(HttpSession session,
                                   MultipartFile cover,
                                   MultipartFile attachment,
@@ -113,8 +128,12 @@ public class ForumArticleController extends BaseController {
 
         title = StringTools.escapeTitle(title);
         SessionWebUserDto userDto = getUserInfoFromSession(session);
+
+        // 发布文章、编辑文章都需要权限校验
+        checkPermission(userDto.getUserId(), UserPermissionEnum.POST_ARTICLE);
+
         ForumArticle forumArticle = new ForumArticle();
-        forumArticle.setPBoardId(pBoardId);
+        forumArticle.setpBoardId(pBoardId);
         forumArticle.setBoardId(boardId);
         forumArticle.setTitle(title);
         forumArticle.setContent(content);
@@ -127,11 +146,61 @@ public class ForumArticleController extends BaseController {
         forumArticle.setUserId(userDto.getUserId());
         forumArticle.setNickName(userDto.getNickName());
         forumArticle.setUserIpAddress(userDto.getProvince());
+        //新发布的文章或编辑后的文章都重新设置为 未审核 未发布
+        forumArticle.setStatus(ArticleStatusEnum.NO_AUDIT.getStatus());
+        forumArticle.setStatus2(ArticleStatusEnum.NO_POST.getStatus());
         //附件信息
         ForumArticleAttachment forumArticleAttachment = new ForumArticleAttachment();
         forumArticleAttachment.setIntegral(integral == null ? 0 : integral);
         forumArticleService.postArticle(userDto.getAdmin(), forumArticle, forumArticleAttachment, cover, attachment);
         return getSuccessResponseVO(forumArticle.getArticleId());
+    }
+
+    @RequestMapping("/handleArticleStatus")
+    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO postArticle(HttpSession session, String articleId, Integer status) {
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        String userId = userDto.getUserId();
+
+        // 如果是修改文章为发布的话就校验是否有权限
+        if (ArticleStatusEnum.POST.getStatus() == status) {
+            checkPermission(userId, UserPermissionEnum.POST_ARTICLE);
+        }
+
+        String[] articleIds = articleId.split(",");
+
+        for (String aid : articleIds) {
+            ForumArticle fa = forumArticleService.getForumArticleByArticleId(aid);
+            if (!fa.getUserId().equals(userId)) {
+                throw new BusinessException("只能修改自己的文章状态。。。");
+            }
+            if (ArticleStatusEnum.NO_POST.getStatus() != status && ArticleStatusEnum.POST.getStatus() != status) {
+                throw new BusinessException("文章要修改为的状态异常。。。");
+            }
+
+            // 发布文章
+            if (ArticleStatusEnum.POST.getStatus() == status) {
+                SysSetting4AuditDto auditStting = SysCacheUtils.getSysSetting().getAuditStting();
+
+                if (ArticleStatusEnum.ERROR_AUDIT.getStatus().equals(fa.getStatus()) ||
+                        ArticleStatusEnum.DEL.getStatus().equals(fa.getStatus())) {
+                    throw new BusinessException("文章要状态异常，你这文章好像有问题啊？");
+                }
+
+                // 需要已审核才能发布
+                if (auditStting.getPostAudit() && ArticleStatusEnum.NO_AUDIT.getStatus().equals(fa.getStatus())) {
+                    throw new BusinessException("现在文章需要审核之后才能发布，无法操作！");
+                }
+            }
+
+            // 撤销文章, 不需要校验是是否需要审核才能撤销
+
+
+            fa.setStatus2(status);
+            forumArticleService.updateForumArticleByArticleId(fa, aid);
+        }
+        return getSuccessResponseVO(null);
+
     }
 
 
@@ -141,22 +210,35 @@ public class ForumArticleController extends BaseController {
 
         ForumArticle forumArticle = forumArticleService.readArticle(articleId);
 
+//        if (forumArticle == null
+//                || (ArticleStatusEnum.NO_AUDIT.getStatus().equals(forumArticle.getStatus()) && (sessionWebUserDto == null || !sessionWebUserDto.getUserId().equals(forumArticle.getUserId()) && !sessionWebUserDto.getAdmin()))
+//                || ArticleStatusEnum.DEL.getStatus().equals(forumArticle.getStatus())) {
+//            throw new BusinessException(ResponseCodeEnum.CODE_404);
+//        }
+
+        // 当前文章不存在 || 当前文章未发布 且 当前登录用户不是作者 || 当前文章已被删除
         if (forumArticle == null
-                || (ArticleStatusEnum.NO_AUDIT.getStatus().equals(forumArticle.getStatus()) && (sessionWebUserDto == null || !sessionWebUserDto.getUserId().equals(forumArticle.getUserId()) && !sessionWebUserDto.getAdmin()))
+                || (ArticleStatusEnum.NO_POST.equals(forumArticle.getStatus2()) && (sessionWebUserDto == null || !sessionWebUserDto.getUserId().equals(forumArticle.getUserId())))
                 || ArticleStatusEnum.DEL.getStatus().equals(forumArticle.getStatus())) {
             throw new BusinessException(ResponseCodeEnum.CODE_404);
         }
-        FormArticleDetailVO detailVO = new FormArticleDetailVO();
-        detailVO.setForumArticle(CopyTools.copy(forumArticle, ForumArticleVO.class));
 
-        if (forumArticle.getAttachmentType() == 1) {
-            ForumArticleAttachmentQuery articleAttachmentQuery = new ForumArticleAttachmentQuery();
-            articleAttachmentQuery.setArticleId(forumArticle.getArticleId());
-            List<ForumArticleAttachment> forumArticleAttachmentList = forumArticleAttachmentService.findListByParam(articleAttachmentQuery);
-            if (!forumArticleAttachmentList.isEmpty()) {
-                detailVO.setAttachment(CopyTools.copy(forumArticleAttachmentList.get(0), ForumArticleAttachmentVo.class));
-            }
-        }
+
+        FormArticleDetailVO detailVO = new FormArticleDetailVO();
+        // TODO 这里也得封装一下这个管理员type
+        ForumArticleVO fav = CopyTools.copy(forumArticle, ForumArticleVO.class);
+        UserInfo uinfo = userInfoService.getUserInfoByUserId(fav.getUserId());
+        fav.setType(uinfo.getStatus());
+        detailVO.setForumArticle(fav);
+
+//        if (forumArticle.getAttachmentType() == 1) {
+//            ForumArticleAttachmentQuery articleAttachmentQuery = new ForumArticleAttachmentQuery();
+//            articleAttachmentQuery.setArticleId(forumArticle.getArticleId());
+//            List<ForumArticleAttachment> forumArticleAttachmentList = forumArticleAttachmentService.findListByParam(articleAttachmentQuery);
+//            if (!forumArticleAttachmentList.isEmpty()) {
+//                detailVO.setAttachment(CopyTools.copy(forumArticleAttachmentList.get(0), ForumArticleAttachmentVo.class));
+//            }
+//        }
 
         if (sessionWebUserDto != null) {
             LikeRecord like = likeRecordService.getUserOperRecordByObjectIdAndUserIdAndOpType(articleId, sessionWebUserDto.getUserId(),
@@ -171,6 +253,11 @@ public class ForumArticleController extends BaseController {
             }
 
         }
+
+//        // 标记文章是否为管理发布的文章
+//        UserInfo userInfo = userInfoService.getUserInfoByUserId(forumArticle.getUserId());
+//        detailVO.setType(userInfo.getStatus());
+
         return getSuccessResponseVO(detailVO);
     }
 
@@ -264,20 +351,24 @@ public class ForumArticleController extends BaseController {
     @GlobalInterceptor(checkLogin = true, checkParams = true)
     public ResponseVO articleDetail4Update(HttpSession session, @VerifyParam(required = true) String articleId) {
         SessionWebUserDto userDto = getUserInfoFromSession(session);
+
+        //更新文章详情校验权限
+        checkPermission(userDto.getUserId(), UserPermissionEnum.POST_ARTICLE);
+
         ForumArticle forumArticle = forumArticleService.getForumArticleByArticleId(articleId);
         if (forumArticle == null || !forumArticle.getUserId().equals(userDto.getUserId())) {
             throw new BusinessException("文章不存在或你无权编辑该文章");
         }
         FormArticleUpdateDetailVO detailVO = new FormArticleUpdateDetailVO();
         detailVO.setForumArticle(forumArticle);
-        if (forumArticle.getAttachmentType() == 1) {
-            ForumArticleAttachmentQuery articleAttachmentQuery = new ForumArticleAttachmentQuery();
-            articleAttachmentQuery.setArticleId(forumArticle.getArticleId());
-            List<ForumArticleAttachment> forumArticleAttachmentList = forumArticleAttachmentService.findListByParam(articleAttachmentQuery);
-            if (!forumArticleAttachmentList.isEmpty()) {
-                detailVO.setAttachment(CopyTools.copy(forumArticleAttachmentList.get(0), ForumArticleAttachmentVo.class));
-            }
-        }
+//        if (forumArticle.getAttachmentType() == 1) {
+//            ForumArticleAttachmentQuery articleAttachmentQuery = new ForumArticleAttachmentQuery();
+//            articleAttachmentQuery.setArticleId(forumArticle.getArticleId());
+//            List<ForumArticleAttachment> forumArticleAttachmentList = forumArticleAttachmentService.findListByParam(articleAttachmentQuery);
+//            if (!forumArticleAttachmentList.isEmpty()) {
+//                detailVO.setAttachment(CopyTools.copy(forumArticleAttachmentList.get(0), ForumArticleAttachmentVo.class));
+//            }
+//        }
         return getSuccessResponseVO(detailVO);
     }
 
@@ -298,9 +389,13 @@ public class ForumArticleController extends BaseController {
                                     @VerifyParam(required = true) Integer attachmentType) {
         title = StringTools.escapeTitle(title);
         SessionWebUserDto userDto = getUserInfoFromSession(session);
+
+        // 更新文章需要校验权限
+        checkPermission(userDto.getUserId(), UserPermissionEnum.POST_ARTICLE);
+
         ForumArticle forumArticle = new ForumArticle();
         forumArticle.setArticleId(articleId);
-        forumArticle.setPBoardId(pBoardId);
+        forumArticle.setpBoardId(pBoardId);
         forumArticle.setBoardId(boardId);
         forumArticle.setTitle(title);
         forumArticle.setContent(content);
@@ -310,6 +405,9 @@ public class ForumArticleController extends BaseController {
         forumArticle.setUserIpAddress(userDto.getProvince());
         forumArticle.setAttachmentType(attachmentType);
         forumArticle.setUserId(userDto.getUserId());
+        // 修改之后就得进行新的一轮审核
+        forumArticle.setStatus(ArticleStatusEnum.NO_AUDIT.getStatus());
+        forumArticle.setStatus2(ArticleStatusEnum.NO_POST.getStatus());
         //附件信息
         ForumArticleAttachment forumArticleAttachment = new ForumArticleAttachment();
         forumArticleAttachment.setIntegral(integral == null ? 0 : integral);
@@ -326,10 +424,61 @@ public class ForumArticleController extends BaseController {
      */
     @RequestMapping("/search")
     @GlobalInterceptor(checkParams = true)
-    public ResponseVO updateArticle(@VerifyParam(required = true, min = 3) String keyword) {
+    public ResponseVO search(@VerifyParam(required = true, min = 3) String keyword) {
         ForumArticleQuery query = new ForumArticleQuery();
         query.setTitleFuzzy(keyword);
+        query.setStatus2(ArticleStatusEnum.POST.getStatus());
         PaginationResultVO result = forumArticleService.findListByPage(query);
         return getSuccessResponseVO(result);
     }
+
+    @RequestMapping("/deleteArticle")
+    @GlobalInterceptor(checkParams = true)
+    public ResponseVO deleteArticle(HttpSession session,
+                                    @VerifyParam(required = true) String articleId) {
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        if (userDto == null) {
+            throw new BusinessException("请先登录");
+        }
+
+        ForumArticle forumArticle = forumArticleService.getForumArticleByArticleId(articleId);
+
+        if (forumArticle == null) {
+            throw new BusinessException("文章不存在，删除失败");
+        }
+
+        if (!forumArticle.getUserId().equals(userDto.getUserId())) {
+            throw new BusinessException("不是你的文章，删除失败！");
+        }
+
+        forumArticle.setStatus(ArticleStatusEnum.DEL.getStatus());
+        forumArticle.setStatus2(ArticleStatusEnum.NO_POST.getStatus());
+        forumArticleService.updateForumArticleByArticleId(forumArticle, articleId);
+
+        return getSuccessResponseVO(null);
+
+    }
+
+
+    /**
+     * 权限校验方法...
+     *
+     * @param userId
+     * @param enumItem
+     */
+    private void checkPermission(String userId, UserPermissionEnum enumItem) {
+        UserPermission userPermission = userPermissionService.getUserPermissionByUserId(userId);
+        List<String> permissions = JsonUtils.convertJsonArray2List(userPermission.getJsonPermission(), String.class);
+        boolean flag = true;
+        for (String permission : permissions) {
+            if (permission.equals(enumItem.getCode())) {
+                flag = false;
+                continue;
+            }
+        }
+        if (flag) {
+            throw new BusinessException("不好一下，您没有【" + enumItem.getDesc() + "】的权限！");
+        }
+    }
+
 }

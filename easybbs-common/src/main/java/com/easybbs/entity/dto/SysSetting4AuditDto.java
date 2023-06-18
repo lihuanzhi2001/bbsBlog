@@ -14,6 +14,14 @@ public class SysSetting4AuditDto {
     @VerifyParam(required = true)
     private Boolean commentAudit;
 
+    /**
+     * 图片是否需要审核
+     *
+     * @return
+     */
+    @VerifyParam(required = true)
+    private Boolean imgAudit;
+
     public Boolean getPostAudit() {
         return postAudit;
     }
@@ -28,5 +36,13 @@ public class SysSetting4AuditDto {
 
     public void setCommentAudit(Boolean commentAudit) {
         this.commentAudit = commentAudit;
+    }
+
+    public void setImgAudit(Boolean imgAudit) {
+        this.imgAudit = imgAudit;
+    }
+
+    public Boolean getImgAudit() {
+        return imgAudit;
     }
 }

@@ -3,6 +3,7 @@ package com.easybbs.entity.query;
 /**
  * 评论参数
  */
+
 public class ForumCommentQuery extends BaseParam {
 
 
@@ -24,7 +25,14 @@ public class ForumCommentQuery extends BaseParam {
     private String articleIdFuzzy;
 
     /**
-     * 回复内容
+     * 原来的评论（未屏蔽）
+     */
+    private String originalContent;
+
+    private String originalContentFuzzy;
+
+    /**
+     * 评论内容(屏蔽词过滤后)
      */
     private String content;
 
@@ -117,200 +125,213 @@ public class ForumCommentQuery extends BaseParam {
      */
     private Boolean onlyQueryChildren;
 
-    public Boolean getOnlyQueryChildren() {
-        return onlyQueryChildren;
+
+    public Integer getCommentId() {
+        return commentId;
     }
 
     public void setCommentId(Integer commentId) {
         this.commentId = commentId;
     }
 
-    public Integer getCommentId() {
-        return this.commentId;
+    public Integer getpCommentId() {
+        return pCommentId;
     }
 
     public void setpCommentId(Integer pCommentId) {
         this.pCommentId = pCommentId;
     }
 
-    public Integer getpCommentId() {
-        return this.pCommentId;
+    public String getArticleId() {
+        return articleId;
     }
 
     public void setArticleId(String articleId) {
         this.articleId = articleId;
     }
 
-    public String getArticleId() {
-        return this.articleId;
+    public String getArticleIdFuzzy() {
+        return articleIdFuzzy;
     }
 
     public void setArticleIdFuzzy(String articleIdFuzzy) {
         this.articleIdFuzzy = articleIdFuzzy;
     }
 
-    public String getArticleIdFuzzy() {
-        return this.articleIdFuzzy;
+    public String getOriginalContent() {
+        return originalContent;
+    }
+
+    public void setOriginalContent(String originalContent) {
+        this.originalContent = originalContent;
+    }
+
+    public String getOriginalContentFuzzy() {
+        return originalContentFuzzy;
+    }
+
+    public void setOriginalContentFuzzy(String originalContentFuzzy) {
+        this.originalContentFuzzy = originalContentFuzzy;
+    }
+
+    public String getContent() {
+        return content;
     }
 
     public void setContent(String content) {
         this.content = content;
     }
 
-    public String getContent() {
-        return this.content;
+    public String getContentFuzzy() {
+        return contentFuzzy;
     }
 
     public void setContentFuzzy(String contentFuzzy) {
         this.contentFuzzy = contentFuzzy;
     }
 
-    public String getContentFuzzy() {
-        return this.contentFuzzy;
+    public String getImgPath() {
+        return imgPath;
     }
 
     public void setImgPath(String imgPath) {
         this.imgPath = imgPath;
     }
 
-    public String getImgPath() {
-        return this.imgPath;
+    public String getImgPathFuzzy() {
+        return imgPathFuzzy;
     }
 
     public void setImgPathFuzzy(String imgPathFuzzy) {
         this.imgPathFuzzy = imgPathFuzzy;
     }
 
-    public String getImgPathFuzzy() {
-        return this.imgPathFuzzy;
+    public String getUserId() {
+        return userId;
     }
 
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public String getUserId() {
-        return this.userId;
+    public String getUserIdFuzzy() {
+        return userIdFuzzy;
     }
 
     public void setUserIdFuzzy(String userIdFuzzy) {
         this.userIdFuzzy = userIdFuzzy;
     }
 
-    public String getUserIdFuzzy() {
-        return this.userIdFuzzy;
+    public String getNickName() {
+        return nickName;
     }
 
     public void setNickName(String nickName) {
         this.nickName = nickName;
     }
 
-    public String getNickName() {
-        return this.nickName;
+    public String getNickNameFuzzy() {
+        return nickNameFuzzy;
     }
 
     public void setNickNameFuzzy(String nickNameFuzzy) {
         this.nickNameFuzzy = nickNameFuzzy;
     }
 
-    public String getNickNameFuzzy() {
-        return this.nickNameFuzzy;
+    public String getUserIpAddress() {
+        return userIpAddress;
     }
 
     public void setUserIpAddress(String userIpAddress) {
         this.userIpAddress = userIpAddress;
     }
 
-    public String getUserIpAddress() {
-        return this.userIpAddress;
+    public String getUserIpAddressFuzzy() {
+        return userIpAddressFuzzy;
     }
 
     public void setUserIpAddressFuzzy(String userIpAddressFuzzy) {
         this.userIpAddressFuzzy = userIpAddressFuzzy;
     }
 
-    public String getUserIpAddressFuzzy() {
-        return this.userIpAddressFuzzy;
+    public String getReplyUserId() {
+        return replyUserId;
     }
 
     public void setReplyUserId(String replyUserId) {
         this.replyUserId = replyUserId;
     }
 
-    public String getReplyUserId() {
-        return this.replyUserId;
+    public String getReplyUserIdFuzzy() {
+        return replyUserIdFuzzy;
     }
 
     public void setReplyUserIdFuzzy(String replyUserIdFuzzy) {
         this.replyUserIdFuzzy = replyUserIdFuzzy;
     }
 
-    public String getReplyUserIdFuzzy() {
-        return this.replyUserIdFuzzy;
+    public String getReplyNickName() {
+        return replyNickName;
     }
 
     public void setReplyNickName(String replyNickName) {
         this.replyNickName = replyNickName;
     }
 
-    public String getReplyNickName() {
-        return this.replyNickName;
+    public String getReplyNickNameFuzzy() {
+        return replyNickNameFuzzy;
     }
 
     public void setReplyNickNameFuzzy(String replyNickNameFuzzy) {
         this.replyNickNameFuzzy = replyNickNameFuzzy;
     }
 
-    public String getReplyNickNameFuzzy() {
-        return this.replyNickNameFuzzy;
+    public Integer getTopType() {
+        return topType;
     }
 
     public void setTopType(Integer topType) {
         this.topType = topType;
     }
 
-    public Integer getTopType() {
-        return this.topType;
+    public String getPostTime() {
+        return postTime;
     }
 
     public void setPostTime(String postTime) {
         this.postTime = postTime;
     }
 
-    public String getPostTime() {
-        return this.postTime;
+    public String getPostTimeStart() {
+        return postTimeStart;
     }
 
     public void setPostTimeStart(String postTimeStart) {
         this.postTimeStart = postTimeStart;
     }
 
-    public String getPostTimeStart() {
-        return this.postTimeStart;
+    public String getPostTimeEnd() {
+        return postTimeEnd;
     }
 
     public void setPostTimeEnd(String postTimeEnd) {
         this.postTimeEnd = postTimeEnd;
     }
 
-    public String getPostTimeEnd() {
-        return this.postTimeEnd;
+    public Integer getGoodCount() {
+        return goodCount;
     }
 
     public void setGoodCount(Integer goodCount) {
         this.goodCount = goodCount;
     }
 
-    public Integer getGoodCount() {
-        return this.goodCount;
+    public Integer getStatus() {
+        return status;
     }
 
     public void setStatus(Integer status) {
         this.status = status;
-    }
-
-    public Integer getStatus() {
-        return this.status;
     }
 
     public Boolean getLoadChildren() {
@@ -335,6 +356,10 @@ public class ForumCommentQuery extends BaseParam {
 
     public void setCurrentUserId(String currentUserId) {
         this.currentUserId = currentUserId;
+    }
+
+    public Boolean getOnlyQueryChildren() {
+        return onlyQueryChildren;
     }
 
     public void setOnlyQueryChildren(Boolean onlyQueryChildren) {

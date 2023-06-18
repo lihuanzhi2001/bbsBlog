@@ -11,7 +11,9 @@
         <result column="p_comment_id" property="pCommentId"/>
         <!--文章ID-->
         <result column="article_id" property="articleId"/>
-        <!--回复内容-->
+        <!--原来的评论（未屏蔽）-->
+        <result column="original_content" property="originalContent"/>
+        <!--评论内容(屏蔽词过滤后)-->
         <result column="content" property="content"/>
         <!--图片-->
         <result column="img_path" property="imgPath"/>
@@ -39,7 +41,7 @@
     <!-- 通用查询结果列-->
     <sql id="base_column_list">
         comment_id
-        ,p_comment_id,article_id,content,img_path,
+        ,p_comment_id,article_id,original_content,content,img_path,
 		 user_id,nick_name,user_ip_address,reply_user_id,reply_nick_name,
 		 top_type,post_time,good_count,status
     </sql>
@@ -53,6 +55,9 @@
         </if>
         <if test="query.articleId != null and query.articleId!=''">
             and article_id = #{query.articleId}
+        </if>
+        <if test="query.originalContent != null and query.originalContent!=''">
+            and original_content = #{query.originalContent}
         </if>
         <if test="query.content != null and query.content!=''">
             and content = #{query.content}
@@ -101,6 +106,9 @@
             <include refid="base_condition_filed"/>
             <if test="query.articleIdFuzzy!= null  and query.articleIdFuzzy!=''">
                 and article_id like concat('%', #{query.articleIdFuzzy}, '%')
+            </if>
+            <if test="query.originalContentFuzzy!= null  and query.originalContentFuzzy!=''">
+                and original_content like concat('%', #{query.originalContentFuzzy}, '%')
             </if>
             <if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
                 and content like concat('%', #{query.contentFuzzy}, '%')
@@ -176,6 +184,9 @@
             <if test="bean.articleId != null">
                 article_id,
             </if>
+            <if test="bean.originalContent != null">
+                original_content,
+            </if>
             <if test="bean.content != null">
                 content,
             </if>
@@ -216,6 +227,9 @@
             </if>
             <if test="bean.articleId!=null">
                 #{bean.articleId},
+            </if>
+            <if test="bean.originalContent!=null">
+                #{bean.originalContent},
             </if>
             <if test="bean.content!=null">
                 #{bean.content},
@@ -266,6 +280,9 @@
             <if test="bean.articleId != null">
                 article_id,
             </if>
+            <if test="bean.originalContent != null">
+                original_content,
+            </if>
             <if test="bean.content != null">
                 content,
             </if>
@@ -310,6 +327,9 @@
             <if test="bean.articleId!=null">
                 #{bean.articleId},
             </if>
+            <if test="bean.originalContent!=null">
+                #{bean.originalContent},
+            </if>
             <if test="bean.content!=null">
                 #{bean.content},
             </if>
@@ -352,6 +372,9 @@
             <if test="bean.articleId!=null">
                 article_id = VALUES(article_id),
             </if>
+            <if test="bean.originalContent!=null">
+                original_content = VALUES(original_content),
+            </if>
             <if test="bean.content!=null">
                 content = VALUES(content),
             </if>
@@ -393,6 +416,7 @@
         INSERT INTO forum_comment(
         p_comment_id,
         article_id,
+        original_content,
         content,
         img_path,
         user_id,
@@ -409,6 +433,7 @@
             (
             #{item.pCommentId},
             #{item.articleId},
+            #{item.originalContent},
             #{item.content},
             #{item.imgPath},
             #{item.userId},
@@ -429,6 +454,7 @@
         INSERT INTO forum_comment(
         p_comment_id,
         article_id,
+        original_content,
         content,
         img_path,
         user_id,
@@ -445,6 +471,7 @@
             (
             #{item.pCommentId},
             #{item.articleId},
+            #{item.originalContent},
             #{item.content},
             #{item.imgPath},
             #{item.userId},
@@ -461,6 +488,7 @@
         on DUPLICATE key update
         p_comment_id = VALUES(p_comment_id),
         article_id = VALUES(article_id),
+        original_content = VALUES(original_content),
         content = VALUES(content),
         img_path = VALUES(img_path),
         user_id = VALUES(user_id),
@@ -483,6 +511,9 @@
             </if>
             <if test="bean.articleId != null">
                 article_id = #{bean.articleId},
+            </if>
+            <if test="bean.originalContent != null">
+                original_content = #{bean.originalContent},
             </if>
             <if test="bean.content != null">
                 content = #{bean.content},

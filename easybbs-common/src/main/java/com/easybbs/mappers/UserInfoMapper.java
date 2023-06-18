@@ -24,6 +24,23 @@ public interface UserInfoMapper<T, P> extends BaseMapper<T, P> {
      */
     T selectByUserId(@Param("userId") String userId);
 
+    /**
+     * 根据Email更新
+     */
+    Integer updateByUsername(@Param("bean") T t, @Param("username") String username);
+
+
+    /**
+     * 根据Email删除
+     */
+    Integer deleteByUsername(@Param("username") String username);
+
+
+    /**
+     * 根据Email获取对象
+     */
+    T selectByUsername(@Param("username") String username);
+
 
     /**
      * 根据Email更新

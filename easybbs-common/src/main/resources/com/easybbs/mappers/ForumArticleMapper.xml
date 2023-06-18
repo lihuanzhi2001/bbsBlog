@@ -49,8 +49,12 @@
         <result column="top_type" property="topType"/>
         <!--0:没有附件  1:有附件-->
         <result column="attachment_type" property="attachmentType"/>
-        <!---1已删除 0:待审核  1:已审核 -->
+        <!---1已删除 0:待审核  1:已审核  4:审核未通过 -->
         <result column="status" property="status"/>
+        <!---2:未发布  3:已发布 -->
+        <result column="status2" property="status2"/>
+        <!--备注-->
+        <result column="note" property="note"/>
     </resultMap>
 
 
@@ -60,7 +64,7 @@
         ,board_id,board_name,p_board_id,p_board_name,
 		 user_id,nick_name,user_ip_address,title,cover,editor_type,summary,post_time,
 		 last_update_time,read_count,good_count,collect_count,comment_count,top_type,
-		 attachment_type,status
+		 attachment_type,status,status2,note
     </sql>
 
     <sql id="base_condition_filed">
@@ -133,6 +137,9 @@
         <if test="query.status != null">
             and status = #{query.status}
         </if>
+        <if test="query.status2 != null">
+            and status2 = #{query.status2}
+        </if>
     </sql>
     <!-- 通用条件列-->
     <sql id="base_condition">
@@ -190,10 +197,10 @@
             <if test="query.lastUpdateTimeEnd!= null and query.lastUpdateTimeEnd!=''">
                 <![CDATA[ and  last_update_time< date_sub(str_to_date(#{query.lastUpdateTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
             </if>
-
+            <!--根据评论用户id查询-->
             <if test="query.commentUserId!=null and query.commentUserId!=''">
                 and article_id in(select article_id from forum_comment where user_id = #{query.commentUserId})
-                and status = 1
+                -- and status = 1
             </if>
 
             <if test="query.likeUserId!=null and query.likeUserId!=''">
@@ -206,8 +213,14 @@
             </if>
 
             <!-- 查询待审核 -->
+            <!--<if test="query.currentUserId!=null">-->
+            <!--and (status = 1 or (status = 0 and user_id = #{query.currentUserId}))-->
+            <!--</if>-->
+            <if test="query.status2!=null">
+                and status2 = 3
+            </if>
             <if test="query.currentUserId!=null">
-                and (status = 1 or (status = 0 and user_id = #{query.currentUserId}))
+                and status in(0, 1, 4) and user_id = #{query.currentUserId}
             </if>
         </where>
     </sql>
@@ -305,6 +318,12 @@
             <if test="bean.status != null">
                 status,
             </if>
+            <if test="bean.status2 != null">
+                status2,
+            </if>
+            <if test="bean.note != null">
+                note,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="bean.articleId!=null">
@@ -372,6 +391,12 @@
             </if>
             <if test="bean.status!=null">
                 #{bean.status},
+            </if>
+            <if test="bean.status2!=null">
+                #{bean.status2},
+            </if>
+            <if test="bean.note!=null">
+                #{bean.note},
             </if>
         </trim>
     </insert>
@@ -449,6 +474,12 @@
             <if test="bean.status != null">
                 status,
             </if>
+            <if test="bean.status2 != null">
+                status2,
+            </if>
+            <if test="bean.note != null">
+                note,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="bean.articleId!=null">
@@ -516,6 +547,12 @@
             </if>
             <if test="bean.status!=null">
                 #{bean.status},
+            </if>
+            <if test="bean.status2!=null">
+                #{bean.status2},
+            </if>
+            <if test="bean.note!=null">
+                #{bean.note},
             </if>
         </trim>
         on DUPLICATE key update
@@ -589,6 +626,12 @@
             <if test="bean.status!=null">
                 status = VALUES(status),
             </if>
+            <if test="bean.status2!=null">
+                status2 = VALUES(status2),
+            </if>
+            <if test="bean.note!=null">
+                note = VALUES(note),
+            </if>
         </trim>
     </insert>
 
@@ -617,7 +660,9 @@
         comment_count,
         top_type,
         attachment_type,
-        status
+        status,
+        status2,
+        note
         )values
         <foreach collection="list" item="item" separator=",">
             (
@@ -642,7 +687,9 @@
             #{item.commentCount},
             #{item.topType},
             #{item.attachmentType},
-            #{item.status}
+            #{item.status},
+            #{item.status2},
+            #{item.note}
             )
         </foreach>
     </insert>
@@ -672,7 +719,9 @@
         comment_count,
         top_type,
         attachment_type,
-        status
+        status,
+        status2,
+        note
         )values
         <foreach collection="list" item="item" separator=",">
             (
@@ -697,7 +746,9 @@
             #{item.commentCount},
             #{item.topType},
             #{item.attachmentType},
-            #{item.status}
+            #{item.status},
+            #{item.status2},
+            #{item.note}
             )
         </foreach>
         on DUPLICATE key update
@@ -723,7 +774,9 @@
         comment_count = VALUES(comment_count),
         top_type = VALUES(top_type),
         attachment_type = VALUES(attachment_type),
-        status = VALUES(status)
+        status = VALUES(status),
+        status2 = VALUES(status2),
+        note = VALUES(note)
     </insert>
 
     <!-- 根据ArticleId修改-->
@@ -795,6 +848,12 @@
             </if>
             <if test="bean.status != null">
                 status = #{bean.status},
+            </if>
+            <if test="bean.status2 != null">
+                status2 = #{bean.status2},
+            </if>
+            <if test="bean.note != null">
+                note = #{bean.note},
             </if>
         </set>
         where article_id=#{articleId}

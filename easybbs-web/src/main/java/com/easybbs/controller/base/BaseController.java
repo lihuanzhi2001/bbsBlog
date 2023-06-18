@@ -67,4 +67,6 @@ public class BaseController {
         SessionWebUserDto sessionWebUserDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
         return sessionWebUserDto;
     }
+
+
 }

@@ -1,13 +1,23 @@
 package com.easybbs.entity.dto;
 
 public class SessionWebUserDto {
+    private String username;
     private String nickName;
     private String province;
     private String userId;
     private Boolean isAdmin;
 
+
     public String getUserId() {
         return userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public void setUserId(String userId) {

@@ -9,6 +9,8 @@
         <result column="user_id" property="userId"/>
         <!--昵称-->
         <result column="nick_name" property="nickName"/>
+        <!--用户名-->
+        <result column="username" property="username"/>
         <!--邮箱-->
         <result column="email" property="email"/>
         <!--密码-->
@@ -37,7 +39,7 @@
     <!-- 通用查询结果列-->
     <sql id="base_column_list">
         user_id
-        ,nick_name,email,password,sex,
+        ,nick_name,username,email,password,sex,
 		 person_description,join_time,last_login_time,last_login_ip,last_login_ip_address,
 		 total_integral,current_integral,status
     </sql>
@@ -48,6 +50,9 @@
         </if>
         <if test="query.nickName != null and query.nickName!=''">
             and nick_name = #{query.nickName}
+        </if>
+        <if test="query.username != null and query.username!=''">
+            and username = #{query.username}
         </if>
         <if test="query.email != null and query.email!=''">
             and email = #{query.email}
@@ -99,6 +104,9 @@
             </if>
             <if test="query.nickNameFuzzy!= null  and query.nickNameFuzzy!=''">
                 and nick_name like concat('%', #{query.nickNameFuzzy}, '%')
+            </if>
+            <if test="query.usernameFuzzy!= null  and query.usernameFuzzy!=''">
+                and username like concat('%', #{query.username}, '%')
             </if>
             <if test="query.emailFuzzy!= null  and query.emailFuzzy!=''">
                 and email like concat('%', #{query.emailFuzzy}, '%')
@@ -160,6 +168,9 @@
             <if test="bean.nickName != null">
                 nick_name,
             </if>
+            <if test="bean.username != null">
+                username,
+            </if>
             <if test="bean.email != null">
                 email,
             </if>
@@ -200,6 +211,9 @@
             </if>
             <if test="bean.nickName!=null">
                 #{bean.nickName},
+            </if>
+            <if test="bean.username!=null">
+                #{bean.username},
             </if>
             <if test="bean.email!=null">
                 #{bean.email},
@@ -247,6 +261,9 @@
             <if test="bean.nickName != null">
                 nick_name,
             </if>
+            <if test="bean.username != null">
+                username,
+            </if>
             <if test="bean.email != null">
                 email,
             </if>
@@ -287,6 +304,9 @@
             </if>
             <if test="bean.nickName!=null">
                 #{bean.nickName},
+            </if>
+            <if test="bean.username!=null">
+                #{bean.username},
             </if>
             <if test="bean.email!=null">
                 #{bean.email},
@@ -330,6 +350,9 @@
             <if test="bean.nickName!=null">
                 nick_name = VALUES(nick_name),
             </if>
+            <if test="bean.username!=null">
+                username = VALUES(username),
+            </if>
             <if test="bean.email!=null">
                 email = VALUES(email),
             </if>
@@ -371,6 +394,7 @@
         INSERT INTO user_info(
         user_id,
         nick_name,
+        username,
         email,
         password,
         sex,
@@ -387,6 +411,7 @@
             (
             #{item.userId},
             #{item.nickName},
+            #{item,username},
             #{item.email},
             #{item.password},
             #{item.sex},
@@ -407,6 +432,7 @@
         INSERT INTO user_info(
         user_id,
         nick_name,
+        username,
         email,
         password,
         sex,
@@ -423,6 +449,7 @@
             (
             #{item.userId},
             #{item.nickName},
+            #{username},
             #{item.email},
             #{item.password},
             #{item.sex},
@@ -439,6 +466,7 @@
         on DUPLICATE key update
         user_id = VALUES(user_id),
         nick_name = VALUES(nick_name),
+        username = VALUES(username),
         email = VALUES(email),
         password = VALUES(password),
         sex = VALUES(sex),
@@ -458,6 +486,9 @@
         <set>
             <if test="bean.nickName != null">
                 nick_name = #{bean.nickName},
+            </if>
+            <if test="bean.username != null">
+                username = #{bean.username},
             </if>
             <if test="bean.email != null">
                 email = #{bean.email},
@@ -508,6 +539,64 @@
         select
         <include refid="base_column_list"/>
         from user_info where user_id=#{userId}
+    </select>
+
+    <!--根据username修改-->
+    <update id="updateByUsername" parameterType="com.easybbs.entity.po.UserInfo">
+        UPDATE user_info
+        <set>
+            <if test="bean.nickName != null">
+                nick_name = #{bean.nickName},
+            </if>
+            <if test="bean.email != null">
+                email = #{bean.email},
+            </if>
+            <if test="bean.password != null">
+                password = #{bean.password},
+            </if>
+            <if test="bean.sex != null">
+                sex = #{bean.sex},
+            </if>
+            <if test="bean.personDescription != null">
+                person_description = #{bean.personDescription},
+            </if>
+            <if test="bean.joinTime != null">
+                join_time = #{bean.joinTime},
+            </if>
+            <if test="bean.lastLoginTime != null">
+                last_login_time = #{bean.lastLoginTime},
+            </if>
+            <if test="bean.lastLoginIp != null">
+                last_login_ip = #{bean.lastLoginIp},
+            </if>
+            <if test="bean.lastLoginIpAddress != null">
+                last_login_ip_address = #{bean.lastLoginIpAddress},
+            </if>
+            <if test="bean.totalIntegral != null">
+                total_integral = #{bean.totalIntegral},
+            </if>
+            <if test="bean.currentIntegral != null">
+                current_integral = #{bean.currentIntegral},
+            </if>
+            <if test="bean.status != null">
+                status = #{bean.status},
+            </if>
+        </set>
+        where username=#{username}
+    </update>
+
+    <!--根据username删除-->
+    <delete id="deleteByUsername">
+        delete
+        from user_info
+        where username = #{username}
+    </delete>
+
+    <!--根据username获取对象-->
+    <select id="selectByUsername" resultMap="base_result_map">
+        select
+        <include refid="base_column_list"/>
+        from user_info where username=#{username}
     </select>
 
     <!-- 根据Email修改-->
@@ -561,7 +650,7 @@
         where email = #{email}
     </delete>
 
-    <!-- 根据PrimaryKey获取对象-->
+    <!-- 根据Email获取对象-->
     <select id="selectByEmail" resultMap="base_result_map">
         select
         <include refid="base_column_list"/>
@@ -619,12 +708,13 @@
         where nick_name = #{nickName}
     </delete>
 
-    <!-- 根据PrimaryKey获取对象-->
+    <!-- 根据NickName获取对象-->
     <select id="selectByNickName" resultMap="base_result_map">
         select
         <include refid="base_column_list"/>
         from user_info where nick_name=#{nickName}
     </select>
+
     <update id="updateIntegral">
         update user_info
         set current_integral = current_integral + #{integral}
@@ -634,4 +724,5 @@
         where user_id = #{userId}
         <![CDATA[ and current_integral + #{integral} >= 0]]>
     </update>
+
 </mapper>

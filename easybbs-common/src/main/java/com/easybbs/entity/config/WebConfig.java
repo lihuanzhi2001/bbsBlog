@@ -11,8 +11,11 @@ public class WebConfig extends AppConfig {
     /**
      * 发送人
      */
-    @Value("${spring.mail.username:}")
+//    @Value("${spring.mail.username:}")
+//    private String sendUserName;
+    @Value("${send.mail:}")
     private String sendUserName;
+
 
     /**
      * 是否发送邮件

@@ -1,5 +1,6 @@
 package com.easybbs.entity.vo.web;
 
+import com.easybbs.entity.dto.UserPrivacyDto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -23,6 +24,21 @@ public class UserInfoVO implements Serializable {
      * 昵称
      */
     private String nickName;
+
+    /**
+     * 用户类型(-1管理员)
+     */
+    private Integer type;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 邮箱
+     */
+    private String email;
 
     /**
      * 性别
@@ -80,6 +96,11 @@ public class UserInfoVO implements Serializable {
      * TODO 新增是否关注标签
      */
     public Boolean haveFollow = false;
+
+    /**
+     * 新增博主隐私设置信息
+     */
+    public UserPrivacyDto userPrivacyDto;
 
 
 }

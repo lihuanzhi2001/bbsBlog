@@ -62,6 +62,23 @@ public interface UserInfoService {
      */
     Integer deleteUserInfoByUserId(String userId);
 
+    /**
+     * 根据UserName查询对象
+     */
+    UserInfo getUserInfoByUsername(String username);
+
+
+    /**
+     * 根据UserName修改
+     */
+    Integer updateUserInfoByUsername(UserInfo bean, String username);
+
+
+    /**
+     * 根据UserName删除
+     */
+    Integer deleteUserInfoByUsername(String username);
+
 
     /**
      * 根据Email查询对象
@@ -98,12 +115,20 @@ public interface UserInfoService {
      */
     Integer deleteUserInfoByNickName(String nickName);
 
-    SessionWebUserDto login(String email, String password, String ip);
+    SessionWebUserDto login(String username, String password, String ip);
 
 //    void register(String email, String nickName, String password, String emailCode);
-    void register(String email, String nickName, String password);
+    // TODO: old register
+//    void register(String email, String nickName, String password);
 
-    void resetPwd(String email, String password, String emailCode);
+    // TODO: new register
+    void register(String username, String nickName, String password);
+
+    void resetPwdByEmail(String email, String password, String emailCode);
+
+    void resetPwdByOldPwd(String username, String oldPassword, String newPassword);
+
+//    void resetPwd(String email, String password, String emailCode);
 
     void updateUserIntegral(String userId, UserIntegralOperTypeEnum operTypeEnum, Integer changeType, Integer integral);
 
@@ -112,4 +137,6 @@ public interface UserInfoService {
     void updateUserStatus(Integer status, String userId);
 
     void sendMessage(String userId, String message, Integer integral);
+
+    void bindEmail(String userId, String email, String emailCode, Integer type);
 }

@@ -174,21 +174,22 @@ public class ForumArticleServiceImpl implements ForumArticleService {
             article.setCover(fileUploadDto.getLocalPath());
         }
 
-        if (attachment != null) {
-            article.setAttachmentType(Constants.ONE);
-            //上传附件
-            uploadAttachment(article, forumArticleAttachment, attachment, false);
-        } else {
-            article.setAttachmentType(Constants.ZERO);
-        }
+//        if (attachment != null) {
+//            article.setAttachmentType(Constants.ONE);
+//            //上传附件
+//            uploadAttachment(article, forumArticleAttachment, attachment, false);
+//        } else {
+//            article.setAttachmentType(Constants.ZERO);
+//        }
 
         //文章是否需要审核
         if (isAdmin) {
             article.setStatus(ArticleStatusEnum.AUDIT.getStatus());
         } else {
             SysSetting4AuditDto auditDto = SysCacheUtils.getSysSetting().getAuditStting();
-            article.setStatus(auditDto.getPostAudit() ? ArticleStatusEnum.NO_AUDIT.getStatus() :
-                    ArticleStatusEnum.AUDIT.getStatus());
+//            article.setStatus(auditDto.getPostAudit() ? ArticleStatusEnum.NO_AUDIT.getStatus() :
+////                    ArticleStatusEnum.AUDIT.getStatus());
+            article.setStatus(ArticleStatusEnum.NO_AUDIT.getStatus());
         }
 
         //替换图片
@@ -300,11 +301,11 @@ public class ForumArticleServiceImpl implements ForumArticleService {
     }
 
     private void resetBoardInfo(Boolean isAdmin, ForumArticle article) {
-        ForumBoard board = forumBoardService.getForumBoardByBoardId(article.getPBoardId());
+        ForumBoard board = forumBoardService.getForumBoardByBoardId(article.getpBoardId());
         if (null == board || board.getPostType() == 0 && !isAdmin) {
             throw new BusinessException("一级板块不存在");
         }
-        article.setPBoardName(board.getBoardName());
+        article.setpBoardName(board.getBoardName());
         if (article.getBoardId() != null && article.getBoardId() != 0) {
             board = forumBoardService.getForumBoardByBoardId(article.getBoardId());
             if (null == board || board.getPostType() == 0 && !isAdmin) {
@@ -370,7 +371,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
     @Override
     public void updateBoard(String articleId, Integer pBoardId, Integer boardId) {
         ForumArticle forumArticle = new ForumArticle();
-        forumArticle.setPBoardId(pBoardId);
+        forumArticle.setpBoardId(pBoardId);
         forumArticle.setBoardId(boardId);
         resetBoardInfo(true, forumArticle);
         forumArticleMapper.updateByArticleId(forumArticle, articleId);
@@ -392,6 +393,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
         }
         ForumArticle updateInfo = new ForumArticle();
         updateInfo.setStatus(ArticleStatusEnum.DEL.getStatus());
+        updateInfo.setStatus2(ArticleStatusEnum.NO_POST.getStatus());
         forumArticleMapper.updateByArticleId(updateInfo, articleId);
 
         Integer integral = SysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
@@ -409,21 +411,41 @@ public class ForumArticleServiceImpl implements ForumArticleService {
     }
 
     @Override
-    public void auditArticle(String articleIds) {
+    public void auditArticle(String articleIds, Integer status, String note) {
         String[] articleIdArray = articleIds.split(",");
         for (String articleId : articleIdArray) {
-            forumArticleService.auditArticleSingle(articleId);
+            forumArticleService.auditArticleSingle(articleId, status, note);
         }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void auditArticleSingle(String articleId) {
+    public void auditArticleSingle(String articleId, Integer status, String note) {
         ForumArticle article = getForumArticleByArticleId(articleId);
-        if (article == null || !ArticleStatusEnum.NO_AUDIT.getStatus().equals(article.getStatus())) {
+//        if (article == null || !ArticleStatusEnum.NO_AUDIT.getStatus().equals(article.getStatus())) {
+        if (article == null) {
             return;
         }
+        Integer no_audit = ArticleStatusEnum.NO_AUDIT.getStatus();
+        Integer audit = ArticleStatusEnum.AUDIT.getStatus();
+        Integer error_audit = ArticleStatusEnum.ERROR_AUDIT.getStatus();
+        if (!no_audit.equals(status) && !audit.equals(status) && !error_audit.equals(status)) {
+            throw new BusinessException("要修改的转态值异常。。。");
+        }
         ForumArticle updateInfo = new ForumArticle();
-        updateInfo.setStatus(ArticleStatusEnum.AUDIT.getStatus());
+        if (error_audit.equals(status)) {
+            // 审核未通过。。。
+            updateInfo.setStatus2(ArticleStatusEnum.NO_POST.getStatus());
+            updateInfo.setStatus(error_audit);
+            updateInfo.setNote(note);
+        } else if (no_audit.equals(status)) {
+            // 撤销审核
+            updateInfo.setStatus(no_audit);
+        } else {
+            // 审核
+            updateInfo.setStatus(ArticleStatusEnum.AUDIT.getStatus());
+            updateInfo.setNote("");
+        }
+
         forumArticleMapper.updateByArticleId(updateInfo, articleId);
 
         Integer integral = SysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();

@@ -110,6 +110,6 @@ public interface ForumArticleService {
      *
      * @param articleIds
      */
-    void auditArticle(String articleIds);
+    void auditArticle(String articleIds, Integer status, String note);
 
 }

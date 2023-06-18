@@ -3,6 +3,7 @@ package com.easybbs.service.impl;
 import com.easybbs.entity.config.WebConfig;
 import com.easybbs.entity.constants.Constants;
 import com.easybbs.entity.dto.SessionWebUserDto;
+import com.easybbs.entity.dto.UserPrivacyDto;
 import com.easybbs.entity.enums.*;
 import com.easybbs.entity.po.*;
 import com.easybbs.entity.query.*;
@@ -12,12 +13,8 @@ import com.easybbs.mappers.ForumArticleMapper;
 import com.easybbs.mappers.ForumCommentMapper;
 import com.easybbs.mappers.UserInfoMapper;
 import com.easybbs.mappers.UserIntegralRecordMapper;
-import com.easybbs.service.EmailCodeService;
-import com.easybbs.service.ForumCommentService;
-import com.easybbs.service.UserInfoService;
-import com.easybbs.service.UserMessageService;
+import com.easybbs.service.*;
 import com.easybbs.utils.*;
-import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,10 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -62,6 +56,12 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Resource
     private ForumCommentMapper<ForumComment, ForumCommentQuery> forumCommentMapper;
+
+    @Resource
+    private UserPrivacyService userPrivacyService;
+
+    @Resource
+    private UserPermissionService userPermissionService;
 
     /**
      * 根据条件查询列表
@@ -150,6 +150,40 @@ public class UserInfoServiceImpl implements UserInfoService {
     }
 
     /**
+     * 根据username获取对象
+     *
+     * @param username
+     * @return
+     */
+    @Override
+    public UserInfo getUserInfoByUsername(String username) {
+        return this.userInfoMapper.selectByUsername(username);
+    }
+
+    /**
+     * 根据username修改
+     *
+     * @param bean
+     * @param username
+     * @return
+     */
+    @Override
+    public Integer updateUserInfoByUsername(UserInfo bean, String username) {
+        return this.userInfoMapper.updateByUsername(bean, username);
+    }
+
+    /**
+     * 根据username删除
+     *
+     * @param username
+     * @return
+     */
+    @Override
+    public Integer deleteUserInfoByUsername(String username) {
+        return this.userInfoMapper.deleteByUsername(username);
+    }
+
+    /**
      * 根据Email获取对象
      */
     @Override
@@ -198,11 +232,20 @@ public class UserInfoServiceImpl implements UserInfoService {
     }
 
     @Override
-    public SessionWebUserDto login(String email, String password, String ip) {
-        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
-        if (null == userInfo || !userInfo.getPassword().equals(password)) {
-            throw new BusinessException("账号或者密码错误");
+    public SessionWebUserDto login(String username, String password, String ip) {
+
+        UserInfo userInfo = this.userInfoMapper.selectByUsername(username);
+
+        String email = username;
+        if (userInfo == null) {
+            userInfo = this.userInfoMapper.selectByEmail(email);
         }
+
+
+        if (null == userInfo || !userInfo.getPassword().equals(password)) {
+            throw new BusinessException("用户名或密码错误!!!");
+        }
+
         if (UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
             throw new BusinessException("账号已禁用");
         }
@@ -215,14 +258,22 @@ public class UserInfoServiceImpl implements UserInfoService {
         updateInfo.setLastLoginIpAddress(pro);
         this.userInfoMapper.updateByUserId(updateInfo, userInfo.getUserId());
         SessionWebUserDto sessionWebUserDto = new SessionWebUserDto();
+        sessionWebUserDto.setUsername(userInfo.getUsername());
         sessionWebUserDto.setNickName(userInfo.getNickName());
         sessionWebUserDto.setProvince(pro);
         sessionWebUserDto.setUserId(userInfo.getUserId());
-        if (!StringTools.isEmpty(webConfig.getAdminEmails()) && ArrayUtils.contains(webConfig.getAdminEmails().split(","), userInfo.getEmail())) {
+
+        // 判断是否为管理员
+        if (userInfo.getStatus() == -1) {
             sessionWebUserDto.setAdmin(true);
         } else {
             sessionWebUserDto.setAdmin(false);
         }
+//        if (!StringTools.isEmpty(webConfig.getAdminEmails()) && ArrayUtils.contains(webConfig.getAdminEmails().split(","), userInfo.getEmail())) {
+//            sessionWebUserDto.setAdmin(true);
+//        } else {
+//            sessionWebUserDto.setAdmin(false);
+//        }
         return sessionWebUserDto;
     }
 
@@ -239,10 +290,53 @@ public class UserInfoServiceImpl implements UserInfoService {
         return addressInfo;
     }
 
+//    @Override
+//    @Transactional(rollbackFor = Exception.class)
+//    public void register(String email, String nickName, String password) {
+//        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
+//        if (null != userInfo) {
+////            throw new BusinessException("邮箱账号已经存在");
+//            throw new BusinessException("用户名已经存在");
+//        }
+//        UserInfo nickNameUser = this.userInfoMapper.selectByNickName(nickName);
+//        if (null != nickNameUser) {
+//            throw new BusinessException("昵称已经存在");
+//        }
+//
+//        //校验邮箱验证码
+////        emailCodeService.checkCode(email, emailCode);
+//
+//        String userId = StringTools.getRandomNumber(Constants.LENGTH_10);
+//        userInfo = new UserInfo();
+//        userInfo.setUserId(userId);
+//        userInfo.setNickName(nickName);
+//        userInfo.setEmail(email);
+//        userInfo.setPassword(StringTools.encodeByMD5(password));
+//        userInfo.setJoinTime(new Date());
+//        userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
+//        userInfo.setTotalIntegral(0);
+//        userInfo.setCurrentIntegral(0);
+//        this.userInfoMapper.insert(userInfo);
+//        updateUserIntegral(userId, UserIntegralOperTypeEnum.REGISTER, UserIntegralChangeTypeEnum.ADD.getChangeType(), 5);
+//
+//
+//        //记录消息
+//        UserMessage userMessage = new UserMessage();
+//        userMessage.setReceivedUserId(userId);
+//        userMessage.setMessageType(MessageTypeEnum.SYS.getType());
+//        userMessage.setCreateTime(new Date());
+//        userMessage.setStatus(MessageStatusEnum.NO_READ.getStatus());
+//        userMessage.setMessageContent(SysCacheUtils.getSysSetting().getRegisterSetting().getRegisterWelcomInfo());
+//        userMessageService.add(userMessage);
+//
+//    }
+
+
+    // new register
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void register(String email, String nickName, String password) {
-        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
+    public void register(String username, String nickName, String password) {
+        UserInfo userInfo = this.userInfoMapper.selectByUsername(username);
         if (null != userInfo) {
 //            throw new BusinessException("邮箱账号已经存在");
             throw new BusinessException("用户名已经存在");
@@ -255,11 +349,13 @@ public class UserInfoServiceImpl implements UserInfoService {
         //校验邮箱验证码
 //        emailCodeService.checkCode(email, emailCode);
 
+        /* TODO 新增用户 */
         String userId = StringTools.getRandomNumber(Constants.LENGTH_10);
         userInfo = new UserInfo();
         userInfo.setUserId(userId);
         userInfo.setNickName(nickName);
-        userInfo.setEmail(email);
+        userInfo.setUsername(username);
+//        userInfo.setEmail(email);
         userInfo.setPassword(StringTools.encodeByMD5(password));
         userInfo.setJoinTime(new Date());
         userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
@@ -268,6 +364,34 @@ public class UserInfoServiceImpl implements UserInfoService {
         this.userInfoMapper.insert(userInfo);
         updateUserIntegral(userId, UserIntegralOperTypeEnum.REGISTER, UserIntegralChangeTypeEnum.ADD.getChangeType(), 5);
 
+        /*TODO 设置用户隐私设置信息*/
+        UserPrivacy userPrivacy = new UserPrivacy();
+        userPrivacy.setUserId(userId);
+        UserPrivacyDto userPrivacyDto = new UserPrivacyDto();
+        // 隐私设置均为所有人可见
+        userPrivacyDto.setArticleView(UserPrivacyEnum.EVERYONE_VISIBLE.getCode());
+        userPrivacyDto.setCommentView(UserPrivacyEnum.EVERYONE_VISIBLE.getCode());
+        userPrivacyDto.setLikeView(UserPrivacyEnum.EVERYONE_VISIBLE.getCode());
+        userPrivacyDto.setCollectView(UserPrivacyEnum.EVERYONE_VISIBLE.getCode());
+        userPrivacyDto.setFollowView(UserPrivacyEnum.EVERYONE_VISIBLE.getCode());
+        userPrivacyDto.setFansView(UserPrivacyEnum.EVERYONE_VISIBLE.getCode());
+        userPrivacy.setJsonPrivacy(JsonUtils.convertObj2Json(userPrivacyDto));
+        userPrivacyService.add(userPrivacy);
+
+        /* TODO 设置用户权限信息 */
+        UserPermission userPermission = new UserPermission();
+        userPermission.setUserId(userId);
+        // 设置用户权限为可发送文章、可发表评论
+//        UserPermissionDto userPermissionDto = new UserPermissionDto();
+        List<String> havePerm = new ArrayList<>();
+        for (UserPermissionEnum enumIte : UserPermissionEnum.getAllItem()) {
+            havePerm.add(enumIte.getCode());
+        }
+
+//        userPermissionDto.setPostArticle(true);
+//        userPermissionDto.setPostComment(true);
+        userPermission.setJsonPermission(JsonUtils.convertObj2Json(havePerm));
+        userPermissionService.add(userPermission);
 
         //记录消息
         UserMessage userMessage = new UserMessage();
@@ -280,21 +404,55 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     }
 
+    /*TODO: 修改密码，根据Email*/
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void resetPwd(String email, String password, String emailCode) {
+    public void resetPwdByEmail(String email, String password, String emailCode) {
         UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
         if (null == userInfo) {
 //            throw new BusinessException("邮箱账号不存在");
             throw new BusinessException("用户名不存在");
         }
         //校验邮箱验证码
-//        emailCodeService.checkCode(email, emailCode);
+        emailCodeService.checkCode(email, emailCode);
 
         UserInfo updateInfo = new UserInfo();
         updateInfo.setPassword(StringTools.encodeByMD5(password));
         this.userInfoMapper.updateByEmail(updateInfo, email);
     }
+
+    /*TODO: 修改密码，根据oldPassword*/
+    @Override
+    public void resetPwdByOldPwd(String username, String oldPassword, String newPassword) {
+        UserInfo userInfo = this.userInfoMapper.selectByUsername(username);
+        if (null == userInfo) {
+            throw new BusinessException("用户名不存在");
+        }
+        if (!userInfo.equals(oldPassword)) {
+            throw new BusinessException("旧密码不对");
+        }
+
+        UserInfo updateInfo = new UserInfo();
+        updateInfo.setPassword(newPassword);
+        this.userInfoMapper.updateByUsername(updateInfo, username);
+    }
+
+
+//    @Override
+//    @Transactional(rollbackFor = Exception.class)
+//    public void resetPwd(String email, String password, String emailCode) {
+//        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
+//        if (null == userInfo) {
+////            throw new BusinessException("邮箱账号不存在");
+//            throw new BusinessException("用户名不存在");
+//        }
+//        //校验邮箱验证码
+////        emailCodeService.checkCode(email, emailCode);
+//
+//        UserInfo updateInfo = new UserInfo();
+//        updateInfo.setPassword(StringTools.encodeByMD5(password));
+//        this.userInfoMapper.updateByEmail(updateInfo, email);
+//    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -358,6 +516,41 @@ public class UserInfoServiceImpl implements UserInfoService {
         if (integral != null && integral != 0) {
             updateUserIntegral(userId, UserIntegralOperTypeEnum.ADMIN, integral > 0 ? UserIntegralChangeTypeEnum.ADD.getChangeType() :
                     UserIntegralChangeTypeEnum.REDUCE.getChangeType(), integral);
+        }
+    }
+
+    /**
+     * 绑定邮箱 / 解绑邮箱
+     *
+     * @param email
+     * @param emailCode
+     * @param type
+     */
+    @Override
+    public void bindEmail(String userId, String email, String emailCode, Integer type) {
+
+        UserInfo userInfo = userInfoMapper.selectByEmail(email);
+        // type 0: 绑定邮箱 1: 解绑邮箱
+        if (type == 0) {
+            if (null != userInfo) {
+                throw new BusinessException("邮箱已经存在");
+            }
+            //校验邮箱验证码
+            emailCodeService.checkCode(email, emailCode);
+
+            UserInfo updateUser = userInfoMapper.selectByUserId(userId);
+
+            updateUser.setEmail(email);
+            userInfoMapper.updateByUserId(updateUser, userId);
+
+        } else {
+            //校验邮箱验证码
+            emailCodeService.checkCode(email, emailCode);
+
+            // 邮箱设空
+            userInfo.setEmail("");
+            userInfoMapper.updateByUserId(userInfo, userId);
+
         }
     }
 }

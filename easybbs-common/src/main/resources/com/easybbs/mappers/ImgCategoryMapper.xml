@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.easybbs.mappers.ImgCategoryMapper">
+
+    <!--实体映射-->
+    <resultMap id="base_result_map" type="com.easybbs.entity.po.ImgCategory">
+        <!--自增ID-->
+        <id column="id" property="id"/>
+        <!--分类名-->
+        <result column="name" property="name"/>
+        <!--排序-->
+        <result column="order" property="order"/>
+    </resultMap>
+
+    <!-- 通用查询结果列-->
+    <sql id="base_column_list">
+        id,`name`,`order`
+    </sql>
+
+    <sql id="base_condition_filed">
+        <if test="query.id != null">
+            and id = #{query.id}
+        </if>
+        <if test="query.name != null and query.name!=''">
+            and `name` = #{query.name}
+        </if>
+        <if test="query.order != null">
+            and `order` = #{query.order}
+        </if>
+    </sql>
+    <!-- 通用条件列-->
+    <sql id="base_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+        </where>
+    </sql>
+
+    <!-- 通用查询条件列-->
+    <sql id="query_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+            <if test="query.nameFuzzy!= null  and query.nameFuzzy!=''">
+                and `name` like concat('%', #{query.nameFuzzy}, '%')
+            </if>
+        </where>
+    </sql>
+
+    <!-- 查询集合-->
+    <select id="selectList" resultMap="base_result_map">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM img_category
+        <include refid="query_condition"/>
+        <if test="query.orderBy!=null">
+            order by ${query.orderBy}
+        </if>
+        <if test="query.simplePage!=null">
+            limit #{query.simplePage.start},#{query.simplePage.end}
+        </if>
+    </select>
+
+    <!-- 查询数量-->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT count(1) FROM img_category
+        <include refid="query_condition"/>
+    </select>
+
+    <!-- 插入 （匹配有值的字段）-->
+    <insert id="insert" parameterType="com.easybbs.entity.po.ImgCategory">
+        <selectKey keyProperty="bean.id" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO img_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.name != null">
+                `name`,
+            </if>
+            <if test="bean.order != null">
+                `order`,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.name != null">
+                #{bean.name},
+            </if>
+            <if test="bean.order != null">
+                #{bean.order},
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 插入或者更新 （匹配有值的字段）-->
+    <insert id="insertOrUpdate" parameterType="com.easybbs.entity.po.ImgCategory">
+        INSERT INTO img_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.name != null">
+                `name`,
+            </if>
+            <if test="bean.order != null">
+                `order`,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.name != null">
+                #{bean.name},
+            </if>
+            <if test="bean.order != null">
+                #{bean.order},
+            </if>
+        </trim>
+        on DUPLICATE key update
+        <trim prefix="" suffix="" suffixOverrides=",">
+            <if test="bean.name != null">
+                `name` = VALUES(`name`),
+            </if>
+            <if test="bean.order != null">
+                `order` = VALUES(`order`),
+            </if>
+        </trim>
+    </insert>
+
+    <!--根据id查询对象-->
+    <select id="getImgCategoryById" resultMap="base_result_map">
+        select
+        <include refid="base_column_list"/>
+        from img_category where id=#{id}
+    </select>
+
+    <!--根据id修改-->
+    <update id="updateImgCategoryById" parameterType="com.easybbs.entity.po.ImgCategory">
+        UPDATE img_category
+        <set>
+            <if test="bean.name != null">
+                `name` = #{bean.name},
+            </if>
+            <if test="bean.order != null">
+                `order` = #{bean.order},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据id删除-->
+    <delete id="deleteImgCategoryById">
+        delete from img_category where id=#{id}
+    </delete>
+
+
+</mapper>

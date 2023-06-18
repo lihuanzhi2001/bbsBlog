@@ -46,6 +46,7 @@ public class SysSettingController extends BaseController {
         sysSettingDto.setEmailSetting(emailDto);
         sysSettingDto.setRegisterSetting(registerDto);
         sysSettingService.saveSetting(sysSettingDto);
+        // 刷新缓存
         sendWebRequest();
         return getSuccessResponseVO(null);
     }

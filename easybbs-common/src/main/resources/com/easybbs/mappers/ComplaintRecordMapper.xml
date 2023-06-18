@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easybbs.mappers.ComplaintRecordMapper">
+
+    <!--实体映射-->
+    <resultMap id="base_result_map" type="com.easybbs.entity.po.ComplaintRecord">
+        <!--自增ID-->
+        <id column="id" property="id"/>
+        <!--用户ID(粉丝id)-->
+        <result column="user_id" property="userId"/>
+        <!--实体ID-->
+        <result column="object_id" property="objectId"/>
+        <!--投诉类型(0: 博文投诉, 1: 评论投诉)-->
+        <result column="type" property="type"/>
+        <!--投诉内容-->
+        <result column="content" property="content"/>
+        <!--创建时间(投诉时间)-->
+        <result column="create_time" property="createTime"/>
+        <!--投诉处理状态(0 - 未处理，1 - 处理中，2 - 已处理，3 - 已关闭)-->
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <!-- 通用查询结果列-->
+    <sql id="base_column_list">
+        id,user_id,object_id,`type`,content,create_time,status
+    </sql>
+
+    <sql id="base_condition_filed">
+        <if test="query.id != null">
+            and id = #{query.id}
+        </if>
+        <if test="query.userId != null and query.userId!=''">
+            and user_id = #{query.userId}
+        </if>
+        <if test="query.type != null">
+            and `type` = #{query.type}
+        </if>
+        <if test="query.content != null and query.content!=''">
+            and content = #{query.content}
+        </if>
+        <if test="query.createTime != null and query.createTime!=''">
+            <![CDATA[ and  create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="query.status != null">
+            and status = #{query.status}
+        </if>
+    </sql>
+    <!-- 通用条件列-->
+    <sql id="base_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+        </where>
+    </sql>
+
+    <!-- 通用查询条件列-->
+    <sql id="query_condition">
+        <where>
+            <include refid="base_condition_filed"/>
+            <if test="query.userIdFuzzy!= null  and query.userIdFuzzy!=''">
+                and user_id like concat('%', #{query.userIdFuzzy}, '%')
+            </if>
+            <if test="query.objectIdFuzzy!= null  and query.objectIdFuzzy!=''">
+                and object_id like concat('%', #{query.objectIdFuzzy}, '%')
+            </if>
+            <if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
+                and content like concat('%', #{query.contentFuzzy}, '%')
+            </if>
+            <if test="query.createTimeStart!= null and query.createTimeStart!=''">
+                <![CDATA[ and  create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+            </if>
+            <if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+                <![CDATA[ and  create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+            </if>
+        </where>
+    </sql>
+
+    <!-- 查询集合-->
+    <select id="selectList" resultMap="base_result_map">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM complaint_record
+        <include refid="query_condition"/>
+        <if test="query.orderBy!=null">
+            order by ${query.orderBy}
+        </if>
+        <if test="query.simplePage!=null">
+            limit #{query.simplePage.start},#{query.simplePage.end}
+        </if>
+    </select>
+
+    <!-- 查询数量-->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT count(1) FROM complaint_record
+        <include refid="query_condition"/>
+    </select>
+
+    <!-- 插入 （匹配有值的字段）-->
+    <insert id="insert" parameterType="com.easybbs.entity.po.ComplaintRecord">
+        <selectKey keyProperty="bean.id" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO complaint_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.userId != null">
+                user_id,
+            </if>
+            <if test="bean.objectId != null">
+                object_id,
+            </if>
+            <if test="bean.type != null">
+                `type`,
+            </if>
+            <if test="bean.content != null">
+                content,
+            </if>
+            <if test="bean.createTime != null">
+                create_time,
+            </if>
+            <if test="bean.status != null">
+                status,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.userId!=null">
+                #{bean.userId},
+            </if>
+            <if test="bean.objectId != null">
+                #{bean.objectId},
+            </if>
+            <if test="bean.type != null">
+                #{bean.type},
+            </if>
+            <if test="bean.content != null">
+                #{bean.content},
+            </if>
+            <if test="bean.createTime != null">
+                #{bean.createTime},
+            </if>
+            <if test="bean.status != null">
+                #{bean.status},
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 插入或者更新 （匹配有值的字段）-->
+    <insert id="insertOrUpdate" parameterType="com.easybbs.entity.po.ComplaintRecord">
+        INSERT INTO complaint_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bean.id != null">
+                id,
+            </if>
+            <if test="bean.userId != null">
+                user_id,
+            </if>
+            <if test="bean.objectId != null">
+                object_id,
+            </if>
+            <if test="bean.type != null">
+                `type`,
+            </if>
+            <if test="bean.content != null">
+                content,
+            </if>
+            <if test="bean.createTime != null">
+                create_time,
+            </if>
+            <if test="bean.status != null">
+                status,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bean.id!=null">
+                #{bean.id},
+            </if>
+            <if test="bean.userId != null">
+                #{bean.userId},
+            </if>
+            <if test="bean.objectId != null">
+                #{bean.objectId},
+            </if>
+            <if test="bean.type != null">
+                #{bean.type},
+            </if>
+            <if test="bean.content != null">
+                #{bean.content},
+            </if>
+            <if test="bean.createTime != null">
+                #{bean.createTime},
+            </if>
+            <if test="bean.status != null">
+                #{bean.status},
+            </if>
+        </trim>
+        on DUPLICATE key update
+        <trim prefix="" suffix="" suffixOverrides=",">
+            <if test="bean.type != null">
+                `type` = VALUES(`type`),
+            </if>
+            <if test="bean.content != null">
+                content = VALUES(content),
+            </if>
+            <if test="bean.createTime != null">
+                create_time = VALUES(create_time),
+            </if>
+            <if test="bean.status != null">
+                user_id = VALUES(status),
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 添加 （批量插入）-->
+    <insert id="insertBatch" parameterType="com.easybbs.entity.po.ComplaintRecord" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO complaint_record(
+        user_id,
+        object_id,
+        `type`,
+        content,
+        create_time,
+        status
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.userId},
+            #{item.objectId},
+            #{item.type},
+            #{item.content},
+            #{item.createTime}
+            #{item.status},
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量新增修改 （批量插入）-->
+    <insert id="insertOrUpdateBatch" parameterType="com.easybbs.entity.po.ComplaintRecord">
+        INSERT INTO complaint_record(
+        user_id,
+        object_id,
+        `type`,
+        content,
+        create_time,
+        status
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.userId},
+            #{item.objectId},
+            #{item.type}
+            #{item.content}
+            #{item.createTime}
+            #{item.status}
+            )
+        </foreach>
+        on DUPLICATE key update
+        content = VALUES(content),
+        create_time = VALUES(create_time),
+        status = VALUES(status),
+    </insert>
+
+
+    <!--根据id查询对象-->
+    <select id="getComplaintRecordById" resultMap="base_result_map">
+        select
+        <include refid="base_column_list"/>
+        from complaint_record where id=#{id}
+    </select>
+
+    <!--根据id更新-->
+    <update id="updateComplaintRecordById" parameterType="com.easybbs.entity.po.ComplaintRecord">
+        UPDATE complaint_record
+        <set>
+            <if test="bean.userId != null">
+                user_id = #{bean.userId},
+            </if>
+            <if test="bean.objectId != null">
+                object_id = #{bean.objectId},
+            </if>
+            <if test="bean.type != null">
+                `type` = #{bean.type},
+            </if>
+            <if test="bean.content != null">
+                content = #{bean.content},
+            </if>
+            <if test="bean.createTime != null">
+                create_time = #{bean.createTime},
+            </if>
+            <if test="bean.status != null">
+                status = #{bean.status},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!--根据id删除-->
+    <delete id="deleteComplaintRecordById">
+        delete from complaint_record where id=#{id}
+    </delete>
+
+    <update id="updateComplaintStatusById" parameterType="com.easybbs.entity.po.ComplaintRecord">
+        UPDATE complaint_record
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+
+</mapper>

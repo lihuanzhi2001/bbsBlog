@@ -22,6 +22,9 @@ public class InitRun implements ApplicationRunner {
     @Resource
     private SysSettingService sysSettingService;
 
+//    @Resource
+//    private MailConfig mailConfig;
+
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -45,6 +48,8 @@ public class InitRun implements ApplicationRunner {
 
         //刷新系统设置缓存
         sysSettingService.refreshCache();
+
+
         logger.info("服务启动成功，开始愉快的开发吧");
     }
 

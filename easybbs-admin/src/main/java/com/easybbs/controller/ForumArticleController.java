@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.List;
@@ -129,10 +130,7 @@ public class ForumArticleController extends BaseController {
 
     /**
      * @Description: 文章置顶
-     * @auther: 程序员老罗
      * @date: 2023/1/10
-     * @param: [topType, articleId]
-     * @return: com.easybbs.entity.vo.ResponseVO
      */
     @RequestMapping("/topArticle")
     @GlobalInterceptor(checkParams = true)
@@ -144,25 +142,21 @@ public class ForumArticleController extends BaseController {
     }
 
     /**
-     * @Description: 审核文章
-     * @auther: 程序员老罗
-     * @date: 2023/1/10
-     * @param: [articleId]
-     * @return: com.easybbs.entity.vo.ResponseVO
+     * 审核文章
      */
     @RequestMapping("/auditArticle")
     @GlobalInterceptor(checkParams = true)
-    public ResponseVO auditArticle(@VerifyParam(required = true) String articleIds) {
-        forumArticleService.auditArticle(articleIds);
+    public ResponseVO auditArticle(@VerifyParam(required = true) String articleIds, Integer status, String note) {
+        if (note == null || "".equals(note)) {
+            note = "对不起，您的文章未审核通过!";
+        }
+        forumArticleService.auditArticle(articleIds, status, note);
         return getSuccessResponseVO(null);
     }
 
+
     /**
-     * @Description: 获取所有评论
-     * @auther: 程序员老罗
-     * @date: 2023/1/10
-     * @param: [commentQuery]
-     * @return: com.easybbs.entity.vo.ResponseVO
+     * 获取所有评论
      */
     @RequestMapping("/loadComment")
     @GlobalInterceptor(checkParams = true)
@@ -173,11 +167,7 @@ public class ForumArticleController extends BaseController {
     }
 
     /**
-     * @Description: 获取文章评论
-     * @auther: 程序员老罗
-     * @date: 2023/1/10
-     * @param: [commentQuery]
-     * @return: com.easybbs.entity.vo.ResponseVO
+     * 获取文章评论
      */
     @RequestMapping("/loadComment4Article")
     @GlobalInterceptor(checkParams = true)
@@ -190,15 +180,12 @@ public class ForumArticleController extends BaseController {
     }
 
     /**
-     * @Description: 删除评论
-     * @auther: 程序员老罗
-     * @date: 2023/1/10
-     * @param: [articleId, commentId]
-     * @return: com.easybbs.entity.vo.ResponseVO
+     * 删除评论
      */
     @RequestMapping("/delComment")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO delComment(@VerifyParam(required = true) String commentIds) {
+        // 删除评论
         forumCommentService.delComment(commentIds);
         return getSuccessResponseVO(null);
     }
@@ -213,7 +200,24 @@ public class ForumArticleController extends BaseController {
     @RequestMapping("/auditComment")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO auditComment(@VerifyParam(required = true) String commentIds) {
+        // 审核评论
         forumCommentService.auditComment(commentIds);
         return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 获取文章详情
+     *
+     * @param session
+     * @param articleId
+     * @return
+     */
+    @RequestMapping("/getArticleDetail")
+    public ResponseVO getArticleDetail(HttpSession session, String articleId) {
+
+        ForumArticle forumArticle = forumArticleService.readArticle(articleId);
+
+
+        return getSuccessResponseVO(forumArticle);
     }
 }

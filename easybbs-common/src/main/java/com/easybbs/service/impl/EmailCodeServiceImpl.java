@@ -18,7 +18,7 @@ import com.easybbs.utils.StringTools;
 import com.easybbs.utils.SysCacheUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +27,7 @@ import javax.annotation.Resource;
 import javax.mail.internet.MimeMessage;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 
 /**
@@ -40,8 +41,8 @@ public class EmailCodeServiceImpl implements EmailCodeService {
     @Resource
     private EmailCodeMapper<EmailCode, EmailCodeQuery> emailCodeMapper;
 
-    @Resource
-    private JavaMailSender javaMailSender;
+//    @Resource
+//    private JavaMailSender javaMailSender;
 
     @Resource
     private WebConfig webConfig;
@@ -136,11 +137,29 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 
     private void sendEmailCode(String toEmail, String code) {
         try {
-            MimeMessage message = javaMailSender.createMimeMessage();
+
+            SysSetting4EmailDto emailSetting = SysCacheUtils.getSysSetting().getEmailSetting();
+
+            JavaMailSenderImpl jms = new JavaMailSenderImpl();
+            jms.setHost(emailSetting.getMailHost());
+            jms.setPort(emailSetting.getMailPort());
+            jms.setUsername(emailSetting.getMailUsername());
+            jms.setPassword(emailSetting.getMailPassword());
+            jms.setDefaultEncoding("UTF-8");
+            Properties p = new Properties();
+//            p.setProperty("mail.smtp.auth", "true");
+            p.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            p.setProperty("mail.debug", "true");
+            jms.setJavaMailProperties(p);
+
+//            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessage message = jms.createMimeMessage();
+
 
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             //邮件发件人
-            helper.setFrom(webConfig.getSendUserName());
+//            helper.setFrom(webConfig.getSendUserName());
+            helper.setFrom(emailSetting.getMailUsername());
             //邮件收件人 1或多个
             helper.setTo(toEmail);
 
@@ -151,17 +170,19 @@ public class EmailCodeServiceImpl implements EmailCodeService {
             helper.setText(String.format(emailDto.getEmailContent(), code));
             //邮件发送时间
             helper.setSentDate(new Date());
-            javaMailSender.send(message);
+//            javaMailSender.send(message);
+            jms.send(message);
         } catch (Exception e) {
             logger.error("邮件发送失败", e);
             throw new BusinessException("邮件发送失败");
         }
     }
 
+    /*TODO: 绑定邮箱 / 修改密码*/
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void sendEmailCode(String toEmail, Integer type) {
-        //如果是注册，校验邮箱是否已存在
+        //如果是绑定邮箱，则校验邮箱是否已存在
         if (type == 0) {
             UserInfo userInfo = userInfoMapper.selectByEmail(toEmail);
             if (null != userInfo) {

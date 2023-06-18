@@ -44,7 +44,8 @@ public class ForumBoardController extends BaseController {
         forumBoard.setpBoardId(pBoardId);
         forumBoard.setBoardName(boardName);
         forumBoard.setBoardDesc(boardDesc);
-        forumBoard.setPostType(postType);
+//        forumBoard.setPostType(postType);
+        forumBoard.setPostType(1);  // 所有人都可以发文章
         if (cover != null) {
             FileUploadDto uploadDto = fileUtils.uploadFile2Local(cover, FileUploadTypeEnum.ARTICLE_COVER, Constants.FILE_FOLDER_IMAGE);
             forumBoard.setCover(uploadDto.getLocalPath());

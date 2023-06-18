@@ -163,7 +163,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
     public void postComment(ForumComment comment, MultipartFile image) {
         //判断文章是否存在
         ForumArticle forumArticle = forumArticleMapper.selectByArticleId(comment.getArticleId());
-        if (forumArticle == null || forumArticle.getStatus() != ArticleStatusEnum.AUDIT.getStatus()) {
+        if (forumArticle == null || forumArticle.getStatus2() != ArticleStatusEnum.POST.getStatus()) {
             throw new BusinessException("评论的文章不存在");
         }
         //判断父级评论是否存在

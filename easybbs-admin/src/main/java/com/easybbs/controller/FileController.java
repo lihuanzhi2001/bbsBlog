@@ -4,8 +4,13 @@ import com.easybbs.annotation.GlobalInterceptor;
 import com.easybbs.annotation.VerifyParam;
 import com.easybbs.controller.base.BaseController;
 import com.easybbs.entity.config.AdminConfig;
+import com.easybbs.entity.config.WebConfig;
 import com.easybbs.entity.constants.Constants;
+import com.easybbs.entity.vo.ResponseVO;
+import com.easybbs.exception.BusinessException;
+import com.easybbs.utils.ScaleFilter;
 import com.easybbs.utils.StringTools;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,11 +18,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/file")
@@ -31,6 +40,9 @@ public class FileController extends BaseController {
 
     @Resource
     private AdminConfig adminConfig;
+
+    @Resource
+    private WebConfig webConfig;
 
     @RequestMapping("/getAvatar/{userId}")
     @GlobalInterceptor(checkParams = true)
@@ -179,6 +191,43 @@ public class FileController extends BaseController {
                     logger.error("IO异常", e);
                 }
             }
+        }
+    }
+
+    @RequestMapping("uploadImage")
+    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO uploadImage(MultipartFile file) {
+        String fileName = file.getOriginalFilename();
+        String fileExtName = StringTools.getFileSuffix(fileName);
+        if (!ArrayUtils.contains(Constants.IMAGE_SUFFIX, fileExtName)) {
+            throw new BusinessException("请选择图片文件上传");
+        }
+        String path = copyFile(file);
+        Map<String, String> fileMap = new HashMap();
+        fileMap.put("fileName", path);
+        return getSuccessResponseVO(fileMap);
+    }
+
+    private String copyFile(MultipartFile file) {
+        try {
+            String fileName = file.getOriginalFilename();
+            String fileExtName = StringTools.getFileSuffix(fileName);
+            String fileRealName = StringTools.getRandomString(Constants.LENGTH_30) + fileExtName;
+            String folderPath = webConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_TEMP;
+            File folder = new File(folderPath);
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+            File uploadFile = new File(folderPath + File.separator + fileRealName);
+            file.transferTo(uploadFile);
+            if (webConfig.getFfmpegCompress() && file.getSize() >= Constants.FILE_SIZE_500KB) {
+                fileRealName = StringTools.getRandomString(Constants.LENGTH_30) + fileExtName;
+                ScaleFilter.compressImageWidthPercentage(uploadFile, new BigDecimal(0.7), new File(folderPath + File.separator + fileRealName));
+            }
+            return Constants.FILE_FOLDER_TEMP_2 + "/" + fileRealName;
+        } catch (Exception e) {
+            logger.error("上传文件失败", e);
+            throw new BusinessException("上传文件失败");
         }
     }
 }

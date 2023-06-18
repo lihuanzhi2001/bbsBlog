@@ -10,7 +10,6 @@ import com.easybbs.entity.vo.ResponseVO;
 import com.easybbs.exception.BusinessException;
 import com.easybbs.utils.ScaleFilter;
 import com.easybbs.utils.StringTools;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -20,17 +19,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.math.BigDecimal;
-import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 @RestController
@@ -47,9 +42,6 @@ public class FileController extends BaseController {
     private WebConfig webConfig;
 
     /**
-     * @Description: 件上传
-     * @auther: 程序员老罗
-     * @date: 2021/1/30
      * @param: [file]
      * @return: com.easypay.entity.vo.AjaxResponseVO
      */
