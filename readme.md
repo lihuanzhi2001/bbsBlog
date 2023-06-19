@@ -1,6 +1,6 @@
 ## 用户访问前台
 
-![](./img/1.png)
+![](https://github.com/lihuanzhi2001/bbsBlog/tree/master/img/1.png)
 
 ![](./img/2.png)
 
